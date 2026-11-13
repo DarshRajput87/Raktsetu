@@ -5,6 +5,7 @@ import time
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
+from modules.dates import to_date
 from modules.state import AppState, CityRoads
 
 log = logging.getLogger("raktsetu")
@@ -21,17 +22,40 @@ async def load_city_roads(db: AsyncIOMotorDatabase, city_id: str) -> CityRoads:
     return roads
 
 
-async def load_state(db: AsyncIOMotorDatabase) -> AppState:
-    """Build the AppState from every collection."""
-    cities = await db.cities.find().to_list(None)
+async def ensure_city_loaded(state: AppState, db: AsyncIOMotorDatabase, city_id: str) -> None:
+    """Make sure a city's roads are in the LRU cache before a search uses them.
+
+    A hit costs nothing here; a miss reads that city's roads from MongoDB once.
+    """
+    if city_id not in state.roads:
+        state.roads.put(city_id, await load_city_roads(db, city_id))
+
+
+async def load_state(db: AsyncIOMotorDatabase, city_cache_capacity: int = 5) -> AppState:
+    """Build the AppState from every collection and preload the first cities' roads."""
+    requests = await db.requests.find().to_list(None)
+    for request in requests:
+        for allocation in request.get("allocations", []):
+            for unit in allocation.get("units", []):
+                unit["expires_on"] = to_date(unit["expires_on"])
+    donors = await db.donors.find().to_list(None)
+    for donor in donors:
+        for donation in donor.get("donations", []):
+            donation["date"] = to_date(donation["date"])
+    transactions = await db.transactions.find().to_list(None)
+    transactions.sort(key=lambda t: t["at"])  # rebuild each bank's log in time order
+
     state = AppState.build(
-        cities=cities,
+        cities=await db.cities.find().to_list(None),
         banks=await db.blood_banks.find().to_list(None),
         hospitals=await db.hospitals.find().to_list(None),
-        donors=await db.donors.find().to_list(None),
+        donors=donors,
         units=await db.blood_units.find().to_list(None),
-        roads=[await load_city_roads(db, city["_id"]) for city in cities],
+        requests=requests,
+        transactions=transactions,
+        city_cache_capacity=city_cache_capacity,
     )
-    counts = state.counts()
-    log.info("Loaded into memory: %s", ", ".join(f"{v:,} {k}" for k, v in counts.items()))
+    for city_id in list(state.cities)[:city_cache_capacity]:
+        await ensure_city_loaded(state, db, city_id)
+    log.info("Loaded into memory: %s", ", ".join(f"{v:,} {k}" for k, v in state.counts().items()))
     return state

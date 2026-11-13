@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     client = connect(settings.mongo_uri)
     app.state.db = client[settings.db_name]
-    app.state.data = await load_state(app.state.db)
+    app.state.data = await load_state(app.state.db, settings.city_cache_capacity)
     yield
     client.close()
 
