@@ -89,7 +89,31 @@ From the repository root, with `make` or with `npm run` (same names):
 | `test` | Run the backend tests |
 | `seed` | Reset MongoDB and load `backend/data/output` |
 
+## Real roads: every Gujarat city
+
+The synthetic grid is for development. The real system covers the seven Gujarat cities in
+`backend/data/cities.json` (Ahmedabad including Gandhinagar, Surat, Vadodara, Rajkot,
+Bhavnagar, Jamnagar, Junagadh), each with a 25 km margin, on real OpenStreetMap roads.
+
+The public Overpass servers are often overloaded, so the import reads a regional extract
+from Geofabrik instead (about 210 MB, covers Gujarat):
+
+```
+cd backend
+pip install -r data/requirements-data.txt
+curl -L -o data/downloads/western-zone.osm.pbf https://download.geofabrik.de/asia/india/western-zone-latest.osm.pbf
+python -m data.import_cities --all --pbf data/downloads/western-zone.osm.pbf
+```
+
+This takes about 6 minutes and replaces the synthetic grid in MongoDB. The road graphs are
+cached in `data/downloads/<city>.graphml`, so later runs (for example with a new `--seed`)
+are offline. One city: `--city surat`. Back to the synthetic grid: `python -m db.seed --reset`.
+
+Demo accounts for real cities carry the city in the address, for example
+`ahmedabad.b001@bank.raktsetu.test` and `surat.h001@hospital.raktsetu.test`
+(password `raktsetu123`).
+
 ## Data
 
-Road data in `backend/data/output_real` is © OpenStreetMap contributors (ODbL).
+Road data is © OpenStreetMap contributors (ODbL).
 All names are made up and all phone numbers use the invalid prefix `+91-00000`.

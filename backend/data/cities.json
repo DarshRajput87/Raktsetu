@@ -5,12 +5,83 @@
     "state": "Gujarat",
     "place": "Ahmedabad, Gujarat, India",
     "margin_km": 25,
-    "notes": "Includes Gandhinagar: it is about 25 km from Ahmedabad, so it falls inside Ahmedabad's 25 km margin and is not imported separately."
+    "notes": "Includes Gandhinagar: it is about 25 km from Ahmedabad, so it falls inside Ahmedabad's 25 km margin and is not imported separately.",
+    "center": [
+      23.0225,
+      72.5714
+    ],
+    "radius_km": 12
   },
-  { "id": "surat", "name": "Surat", "state": "Gujarat", "place": "Surat, Gujarat, India", "margin_km": 25 },
-  { "id": "vadodara", "name": "Vadodara", "state": "Gujarat", "place": "Vadodara, Gujarat, India", "margin_km": 25 },
-  { "id": "rajkot", "name": "Rajkot", "state": "Gujarat", "place": "Rajkot, Gujarat, India", "margin_km": 25 },
-  { "id": "bhavnagar", "name": "Bhavnagar", "state": "Gujarat", "place": "Bhavnagar, Gujarat, India", "margin_km": 25 },
-  { "id": "jamnagar", "name": "Jamnagar", "state": "Gujarat", "place": "Jamnagar, Gujarat, India", "margin_km": 25 },
-  { "id": "junagadh", "name": "Junagadh", "state": "Gujarat", "place": "Junagadh, Gujarat, India", "margin_km": 25 }
+  {
+    "id": "surat",
+    "name": "Surat",
+    "state": "Gujarat",
+    "place": "Surat, Gujarat, India",
+    "margin_km": 25,
+    "center": [
+      21.1702,
+      72.8311
+    ],
+    "radius_km": 10
+  },
+  {
+    "id": "vadodara",
+    "name": "Vadodara",
+    "state": "Gujarat",
+    "place": "Vadodara, Gujarat, India",
+    "margin_km": 25,
+    "center": [
+      22.3072,
+      73.1812
+    ],
+    "radius_km": 8
+  },
+  {
+    "id": "rajkot",
+    "name": "Rajkot",
+    "state": "Gujarat",
+    "place": "Rajkot, Gujarat, India",
+    "margin_km": 25,
+    "center": [
+      22.3039,
+      70.8022
+    ],
+    "radius_km": 7
+  },
+  {
+    "id": "bhavnagar",
+    "name": "Bhavnagar",
+    "state": "Gujarat",
+    "place": "Bhavnagar, Gujarat, India",
+    "margin_km": 25,
+    "center": [
+      21.7645,
+      72.1519
+    ],
+    "radius_km": 5
+  },
+  {
+    "id": "jamnagar",
+    "name": "Jamnagar",
+    "state": "Gujarat",
+    "place": "Jamnagar, Gujarat, India",
+    "margin_km": 25,
+    "center": [
+      22.4707,
+      70.0577
+    ],
+    "radius_km": 5
+  },
+  {
+    "id": "junagadh",
+    "name": "Junagadh",
+    "state": "Gujarat",
+    "place": "Junagadh, Gujarat, India",
+    "margin_km": 25,
+    "center": [
+      21.5222,
+      70.4579
+    ],
+    "radius_km": 4
+  }
 ]

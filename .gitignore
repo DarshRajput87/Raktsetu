@@ -32,3 +32,4 @@ backend/data/downloads/
 Thumbs.db
 .claude/
 backend/data/output_cities/
+backend/cache/

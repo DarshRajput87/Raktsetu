@@ -1,2 +1,3 @@
 # Data import only (downloading OpenStreetMap roads). Not needed by the API.
 osmnx
+osmium   # reads .osm.pbf extracts (data/osm_extract.py)

@@ -45,13 +45,43 @@ def load_city_list() -> list[dict]:
         return json.load(f)
 
 
+def city_bbox(city: dict) -> tuple[float, float, float, float]:
+    """(south, west, north, east): the city (centre +/- radius_km) expanded by its margin.
+
+    The city's extent comes from cities.json rather than from geocoding the
+    place name: "Ahmedabad, Gujarat, India" geocodes to the whole district,
+    which is about ten times the area a search needs.
+    """
+    lat, lng = city["center"]
+    return real.expand_bbox(lat, lng, lat, lng, city["radius_km"] + city["margin_km"])
+
+
+def download_graph(city: dict, cache: Path):
+    """Download the drivable roads inside city_bbox and cache them as GraphML."""
+    import osmnx as ox
+
+    south, west, north, east = city_bbox(city)
+    print(f"Downloading drivable roads for {city['name']} + {city['margin_km']} km "
+          f"(bbox S{south:.3f} W{west:.3f} N{north:.3f} E{east:.3f}). This can take a few minutes ...")
+    ox.settings.requests_timeout = 300
+    ox.settings.max_query_area_size = 12_000_000_000  # one request per city instead of several
+    t0 = time.time()
+    G = ox.graph_from_bbox(bbox=(west, south, east, north), network_type="drive")
+    G = ox.truncate.largest_component(G, strongly=False)
+    print(f"Downloaded in {time.time() - t0:.0f} s")
+    os.makedirs(cache.parent, exist_ok=True)
+    ox.save_graphml(G, cache)
+    print(f"Saved road cache to {cache}")
+    return G
+
+
 def get_graph(city: dict):
     """The city's road graph: from downloads/<id>.graphml if present, else downloaded."""
     cache = HERE / "downloads" / f"{city['id']}.graphml"
     if cache.exists():
         print(f"Loading roads from {cache}")
-        return real.load_graph(str(cache)), None
-    return real.download_graph(city["place"], city["margin_km"], str(cache))
+        return real.load_graph(str(cache))
+    return download_graph(city, cache)
 
 
 def build_city(city: dict, args: argparse.Namespace) -> tuple[dict[str, list[dict]], dict]:
@@ -59,11 +89,9 @@ def build_city(city: dict, args: argparse.Namespace) -> tuple[dict[str, list[dic
     draws as generate_real_data.main, so the same seed gives the same data."""
     rng = random.Random(args.seed)
     as_of = date.fromisoformat(args.as_of)
-    G, center = get_graph(city)
+    G = get_graph(city)
     nodes, edges = real.convert_graph(G, city["id"])
-    if center is None:
-        center = (sum(n["lat"] for n in nodes.values()) / len(nodes),
-                  sum(n["lng"] for n in nodes.values()) / len(nodes))
+    center = tuple(city["center"])
     collections = {"road_nodes": list(nodes.values()), "road_edges": edges}
 
     if not args.roads_only:
@@ -157,6 +185,9 @@ def main() -> None:
     p.add_argument("--as-of", default=(settings.as_of_date or date.today()).isoformat())
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--overpass-url", default=None, help="another Overpass server, if the default is busy")
+    p.add_argument("--pbf", default=None,
+                   help="build missing road graphs from this OSM extract instead of Overpass "
+                        "(e.g. data/downloads/western-zone.osm.pbf from download.geofabrik.de)")
     p.add_argument("--mongo-uri", default=settings.mongo_uri)
     p.add_argument("--db", default=settings.db_name)
     args = p.parse_args()
@@ -167,6 +198,12 @@ def main() -> None:
     db = None if args.no_mongo else MongoClient(args.mongo_uri, serverSelectionTimeoutMS=5000)[args.db]
     t0 = time.time()
     selected = cities if args.all else [c for c in cities if c["id"] == args.city]
+    if args.pbf:
+        from data.osm_extract import save_graphs
+        missing = {c["id"]: city_bbox(c) for c in selected
+                   if not (HERE / "downloads" / f"{c['id']}.graphml").exists()}
+        if missing:
+            save_graphs(Path(args.pbf), missing, HERE / "downloads")
     for city in selected:
         import_city(db, city, args)
     if db is not None and not args.roads_only:
