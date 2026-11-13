@@ -1,0 +1,11 @@
+{
+  "name": "raktsetu",
+  "private": true,
+  "description": "Task runner for RaktSetu (same targets as the Makefile).",
+  "scripts": {
+    "backend-dev": "cd backend && .venv\\Scripts\\python -m uvicorn api.main:app --reload",
+    "frontend-dev": "cd frontend && npm run dev",
+    "test": "cd backend && .venv\\Scripts\\python -m pytest -q",
+    "seed": "cd backend && .venv\\Scripts\\python -m db.seed --reset"
+  }
+}

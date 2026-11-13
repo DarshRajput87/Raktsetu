@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/
+.next/
+out/
+npm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Generated data (large; rebuild with the scripts in backend/data)
+backend/data/output/
+backend/data/output_real/
+backend/data/downloads/
+
+# Editors / OS / tools
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.claude/

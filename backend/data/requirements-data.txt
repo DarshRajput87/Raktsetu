@@ -1,0 +1,2 @@
+# Data import only (downloading OpenStreetMap roads). Not needed by the API.
+osmnx
