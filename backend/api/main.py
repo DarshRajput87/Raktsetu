@@ -51,6 +51,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in get_settings().frontend_origin.split(",")],
+    # In development the Next.js dev server picks another port when 3000 is busy
+    # (3001, 3002, ...), so any localhost port is allowed. Production uses FRONTEND_ORIGIN only.
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?" if get_settings().is_dev else None,
     allow_methods=["*"],
     allow_headers=["*"],
 )

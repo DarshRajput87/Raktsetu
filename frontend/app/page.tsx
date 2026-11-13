@@ -36,6 +36,7 @@ export default function SearchPage() {
   const [skip, setSkip] = useState(false);
   const resultsRef = useRef<HTMLHeadingElement>(null);
   const runId = useRef(0);
+  const mapRef = useRef<HTMLDivElement>(null);
 
   const city = cities.data?.find((c) => c.id === cityId) ?? cities.data?.[0];
   const center = city?.center ?? FALLBACK_CENTER;
@@ -85,6 +86,8 @@ export default function SearchPage() {
         runId.current += 1;
         setSkip(false);
         setAnimating(true);
+        // On a phone the map is below the results: bring it into view.
+        mapRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
         setAnimation({
           runId: runId.current,
           trace: found.trace,
@@ -139,7 +142,7 @@ export default function SearchPage() {
   const fit = useMemo<LatLng[]>(() => {
     if (!position) return [];
     if (!result) return [position];
-    if (animation) {
+    if (animating) {
       const dLat = result.radius_km / 111;
       const dLng = result.radius_km / (111 * Math.cos((position[0] * Math.PI) / 180));
       return [[position[0] - dLat, position[1] - dLng], [position[0] + dLat, position[1] + dLng]];
@@ -147,7 +150,7 @@ export default function SearchPage() {
     const points = route?.points ?? result.route;
     if (points.length) return points;
     return [position, ...result.donors.slice(0, 10).map((d): LatLng => [d.lat, d.lng])];
-  }, [position, result, route, animation]);
+  }, [position, result, route, animating]);
 
   const radius = result?.radius_km ?? DEFAULT_RADIUS;
   const label = `${group} ${COMPONENT_LABELS[component].toLowerCase()}`;
@@ -248,8 +251,8 @@ export default function SearchPage() {
                   </Button>
                 </div>
               ) : (
-                <Button variant="ghost" onClick={() => runSearch(radius, true)}>
-                  Show how it works (shortest-path animation)
+                <Button variant="secondary" className="w-full" onClick={() => runSearch(radius, true)}>
+                  {animation ? "Replay how it works" : "Show how it works"}
                 </Button>
               )}
             </div>
@@ -257,7 +260,7 @@ export default function SearchPage() {
         </section>
       </div>
 
-      <div className="min-w-0 lg:sticky lg:top-4 lg:self-start">
+      <div ref={mapRef} className="min-w-0 scroll-mt-4 lg:sticky lg:top-4 lg:self-start">
         <MapView
           label="Map of blood banks, donors and the route"
           className="h-80 lg:h-[calc(100vh-8rem)]"

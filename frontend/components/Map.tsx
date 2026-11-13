@@ -116,12 +116,18 @@ function TraceAnimation({
     for (const bank of banksReached) banksAt.set(bank.node, [...(banksAt.get(bank.node) ?? []), bank]);
     const line = L.polyline([], { color: "#b3202f", weight: 5, opacity: 0.9 }).addTo(layer);
 
-    // About 4 seconds at normal speed, never fewer than 20 junctions per frame.
-    const perFrame = Math.max(20, Math.ceil(trace.length / 240));
-    const routePerFrame = Math.max(1, Math.ceil(route.length / 60));
+    // Time-based, so the run lasts the same on any screen and any city size:
+    // about 3.5 s for the wave and 1.5 s for the route at normal speed.
+    const WAVE_MS = 3500;
+    const ROUTE_MS = 1500;
+    const PAUSE_MS = 400;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let i = 0;
-    let r = 0;
+    let i = 0; // junctions drawn so far
+    let r = 0; // route points drawn so far
+    let wave = 0; // same, as fractions that grow with time
+    let path = 0;
+    let pause = 0;
+    let last = performance.now();
     let frame = 0;
 
     function showBank(bank: BankReached) {
@@ -141,19 +147,22 @@ function TraceAnimation({
       }
     }
 
-    function step() {
+    function step(now: number) {
       const instant = skipRef.current || reduced;
-      const speed = instant ? Infinity : speedRef.current;
+      const elapsed = Math.min(100, Math.max(1, now - last)) * (instant ? Infinity : speedRef.current);
+      last = now;
       if (i < trace.length) {
-        const end = Math.min(trace.length, i + perFrame * speed);
-        for (; i < end; i++) {
+        wave = Math.min(trace.length, wave + (trace.length * elapsed) / WAVE_MS);
+        for (; i < wave; i++) {
           const t = trace[i];
           L.circleMarker([t.lat, t.lng], { renderer, radius: 2, stroke: false, fillColor: "#b3202f", fillOpacity: 0.45, interactive: false }).addTo(layer);
           banksAt.get(t.node)?.forEach(showBank);
         }
+      } else if (pause < PAUSE_MS && route.length > 0) {
+        pause += elapsed; // a beat between the wave and the route
       } else if (r < route.length) {
-        const end = Math.min(route.length, r + routePerFrame * speed);
-        for (; r < end; r++) line.addLatLng(route[r]);
+        path = Math.min(route.length, path + (route.length * elapsed) / ROUTE_MS);
+        for (; r < path; r++) line.addLatLng(route[r]);
       } else {
         doneRef.current();
         return;
