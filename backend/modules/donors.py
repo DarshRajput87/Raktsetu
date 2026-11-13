@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, timedelta
 
-from modules.cities import city_for_location
+from modules.cities import snap_to_city
 from modules.compatibility import BLOOD_GROUPS, COMPONENTS, SHELF_LIFE_DAYS
 from modules.eligibility import HEALTH_FLAGS, eligibility_reasons, is_eligible
 from modules.search import nearest_banks
@@ -23,13 +23,8 @@ def new_id(prefix: str) -> str:
 
 
 def snap(state: AppState, lat: float, lng: float, city_id: str | None = None) -> tuple[str, str]:
-    """(city_id, node_id) of the nearest road junction of the location's city.
-
-    Used for every place that arrives with only a lat/lng. Average O(1): a
-    city lookup over a handful of cities plus one grid-index lookup.
-    """
-    city_id = city_for_location(state.cities, lat, lng, city_id)
-    return city_id, state.get_roads(city_id).index.nearest(lat, lng)[0]
+    """(city_id, node_id) of the nearest road junction of the location's city."""
+    return snap_to_city(state.cities, lambda city: state.get_roads(city).index, lat, lng, city_id)
 
 
 def register(state: AppState, data: dict, today: date) -> dict:

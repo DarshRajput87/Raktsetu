@@ -45,6 +45,18 @@ def city_for_location(cities: dict[str, dict], lat: float, lng: float,
     return best
 
 
+def snap_to_city(cities: dict[str, dict], index_for: Callable[[str], object], lat: float, lng: float,
+                 picked: str | None = None) -> tuple[str, str]:
+    """(city_id, node_id): the city a location belongs to and its nearest road
+    junction there. index_for(city_id) returns that city's GridIndex.
+
+    The one function used for every place that arrives with only a lat/lng: by
+    the register endpoints and by data/snap_places.py. Average O(1).
+    """
+    city_id = city_for_location(cities, lat, lng, picked)
+    return city_id, index_for(city_id).nearest(lat, lng)[0]
+
+
 class CityGraphCache:
     """LRU cache of city road networks (modules.state.CityRoads).
 

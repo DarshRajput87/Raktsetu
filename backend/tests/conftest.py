@@ -1,6 +1,11 @@
 """Shared fixtures."""
 
 import json
+import os
+
+# Test settings. Set before anything imports config.get_settings (it is cached).
+os.environ.update(DB_NAME="raktsetu_test", BACKGROUND_TASKS="false", AS_OF_DATE="2026-11-13",
+                  ENVIRONMENT="development", JWT_SECRET="test-secret", CITY_CACHE_CAPACITY="5")
 from datetime import date
 from pathlib import Path
 

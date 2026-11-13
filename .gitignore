@@ -31,3 +31,4 @@ backend/data/downloads/
 .DS_Store
 Thumbs.db
 .claude/
+backend/data/output_cities/

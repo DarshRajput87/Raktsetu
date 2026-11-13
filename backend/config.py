@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     city_cache_capacity: int = 5
     contact_views_per_day: int = 20
     otp_ttl_seconds: int = 300
+    request_dispatch_seconds: float = 3.0
+    background_tasks: bool = True
 
     @field_validator("as_of_date", mode="before")
     @classmethod
