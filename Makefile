@@ -7,7 +7,7 @@ else
 PY := backend/.venv/bin/python
 endif
 
-.PHONY: backend-dev frontend-dev test seed
+.PHONY: backend-dev frontend-dev test test-backend test-e2e bench seed
 
 backend-dev:
 	cd backend && ../$(PY) -m uvicorn api.main:app --reload
@@ -15,8 +15,18 @@ backend-dev:
 frontend-dev:
 	cd frontend && npm run dev
 
-test:
+# Everything: backend unit, API and scenario tests, then the browser tests.
+# Needs MongoDB running. Uses its own databases (raktsetu_test, raktsetu_e2e).
+test: test-backend test-e2e
+
+test-backend:
 	cd backend && ../$(PY) -m pytest -q
+
+test-e2e:
+	cd frontend && npx playwright test
+
+bench:
+	cd backend && ../$(PY) -m benchmarks.bench_core
 
 seed:
 	cd backend && ../$(PY) -m db.seed --reset

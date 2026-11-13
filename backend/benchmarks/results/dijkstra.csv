@@ -1,0 +1,3 @@
+graph,junctions,roads,start_points,full_ms_mean,cutoff_ms_mean,full_nodes_mean,cutoff_nodes_mean,speedup,nodes_share_pct
+Synthetic 60 km grid,3721,6587,200,21.45,4.76,3721,826,4.5,22.2
+Ahmedabad real roads,110226,143349,200,908.66,433.28,110172,52029,2.1,47.2

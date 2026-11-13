@@ -1,0 +1,8 @@
+city,junctions,searches,median_ms,p95_ms,mean_junctions_visited,donor_fallback_pct
+Ahmedabad,110226,100,545.63,772.11,55313,9.0
+Bhavnagar,19295,100,126.16,157.03,17484,0.0
+Jamnagar,24853,100,139.3,173.65,16598,3.0
+Junagadh,21411,100,92.54,117.15,11216,6.0
+Rajkot,45564,100,293.84,352.89,31112,9.0
+Surat,105432,100,555.27,643.39,53374,11.0
+Vadodara,83571,100,423.21,493.57,41671,32.0

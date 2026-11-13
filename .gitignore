@@ -34,3 +34,4 @@ Thumbs.db
 backend/data/output_cities/
 backend/cache/
 frontend/.flows/
+backend/benchmarks/.cache/

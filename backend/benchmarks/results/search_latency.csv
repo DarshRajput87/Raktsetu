@@ -1,0 +1,4 @@
+city,junctions,searches,median_ms,p95_ms,mean_junctions_visited,donor_fallback_pct
+30 km grid,961,200,4.64,7.57,595,0.5
+60 km grid,3721,200,5.96,9.92,799,18.5
+100 km grid,10201,200,6.91,10.24,923,38.0

@@ -86,8 +86,42 @@ From the repository root, with `make` or with `npm run` (same names):
 |---|---|
 | `backend-dev` | Run the API with reload |
 | `frontend-dev` | Run the Next.js dev server |
-| `test` | Run the backend tests |
+| `test` | Everything: backend tests, then the browser tests |
+| `test-backend` | Unit, API and end-to-end scenario tests (pytest) |
+| `test-e2e` | Browser tests of the search flow (Playwright, phone and desktop) |
+| `bench` | Core benchmarks; writes CSVs and charts to `backend/benchmarks/results/` |
 | `seed` | Reset MongoDB and load `backend/data/output` |
+
+## Testing
+
+MongoDB must be running. The tests never touch your working database: pytest uses
+`raktsetu_test` and the browser tests use `raktsetu_e2e`, both seeded from the fixed
+synthetic city (seed 42, as of 2026-11-13).
+
+```
+npm run test            # or: make test
+```
+
+- **Backend** (`backend/tests`): the data structures, the domain modules, every API
+  endpoint, and the end-to-end scenarios (search with route; donor fallback with logged,
+  rate-limited contact; accident served before planned surgery; donor registration and
+  donation; issue and undo).
+- **Browser** (`frontend/e2e`): Playwright starts its own API on port 8001 and a
+  production build of the frontend on port 3100, then runs the search flow on a phone
+  and a desktop screen: banks found with the route, and the donor fallback. First time
+  only: `cd frontend && npx playwright install chromium`.
+
+## Benchmarks
+
+```
+cd backend
+pip install -r benchmarks/requirements.txt
+python -m benchmarks.bench_core          # about 10 minutes; --quick for a smoke test
+```
+
+Results (CSV files, PNG charts and `summary.md`) go to `backend/benchmarks/results/`:
+our MinHeap against Python's heapq, Dijkstra with the 25 km cutoff against a full
+search, and search time by city size and on each city's real roads.
 
 ## Real roads: every Gujarat city
 
