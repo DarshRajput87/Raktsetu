@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
-/* Clean white design; red is the only accent colour. */
+/*
+ * RaktSetu design tokens.
+ * White and clinical, with rakt red as the one accent. Ink is a deep slate-blue
+ * (hospital scrubs), not black. Surfaces step up in three levels:
+ * canvas (page) -> surface (sunken panels, inputs at rest) -> white (raised).
+ */
 @theme inline {
   --color-accent: #b3202f;
-  --color-accent-dark: #8f1925;
-  --color-accent-soft: #fbeced;
-  --color-ink: #1b1b1f;
-  --color-muted: #5c5f66;
-  --color-line: #e3e3e6;
-  --color-surface: #f6f6f7;
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-accent-dark: #86141f;
+  --color-accent-soft: #fbeef0;
+  --color-accent-tint-1: #fdf4f5;
+  --color-accent-tint-2: #f8dadd;
+  --color-accent-tint-3: #f0b4bb;
+  --color-accent-tint-4: #de7d88;
+  --color-ink: #1b2333;
+  --color-ink-soft: #3a4457;
+  --color-muted: #5b6475;
+  --color-faint: #8a92a3;
+  --color-line: #e3e6ec;
+  --color-line-strong: #cfd4dd;
+  --color-surface: #f5f6f8;
+  --color-canvas: #fbfbfc;
+  --color-you: #1d64d8;
+  --color-ok: #1b7f45;
+
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-deva: var(--font-deva), sans-serif;
+
+  --radius-control: 10px;
+  --radius-panel: 16px;
+
+  --shadow-raise: 0 1px 2px rgb(27 35 51 / 0.06), 0 1px 1px rgb(27 35 51 / 0.04);
+  --shadow-float: 0 1px 2px rgb(27 35 51 / 0.05), 0 8px 24px -6px rgb(27 35 51 / 0.14);
+  --shadow-accent: 0 1px 2px rgb(134 20 31 / 0.25), 0 6px 16px -6px rgb(179 32 47 / 0.55);
 }
 
 html {
   color-scheme: light;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: #ffffff;
+  background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
 
 :focus-visible {
@@ -32,18 +58,91 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+  letter-spacing: -0.015em;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 .tabular {
   font-variant-numeric: tabular-nums;
 }
 
-dialog::backdrop {
-  background: rgb(0 0 0 / 0.45);
+::selection {
+  background: var(--color-accent-tint-2);
 }
 
-/* Map pins (Leaflet divIcons). The outer box is the hit area; the pin is centred in it.
-   Pins do nothing when clicked (they only show a tooltip), so no pointer cursor. */
+/* ---- Dialog ---------------------------------------------------------------- */
+
+dialog::backdrop {
+  background: rgb(27 35 51 / 0.42);
+  backdrop-filter: blur(3px);
+}
+
+dialog[open] {
+  animation: dialog-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+/* ---- Skeleton loaders ---------------------------------------------------- */
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface) 0%, #eceef2 40%, var(--color-surface) 80%);
+  background-size: 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+/* ---- Leaflet chrome, matched to the design -------------------------------- */
+
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: #eef0f3;
+}
+
+.leaflet-bar {
+  border: 1px solid var(--color-line) !important;
+  border-radius: var(--radius-control) !important;
+  box-shadow: var(--shadow-float) !important;
+  overflow: hidden;
+}
+.leaflet-bar a {
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  color: var(--color-ink) !important;
+  border-color: var(--color-line) !important;
+}
+.leaflet-tooltip {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-float);
+  color: var(--color-ink);
+  font: 500 12px/1.35 var(--font-sans);
+  padding: 4px 8px;
+}
+.leaflet-control-attribution {
+  font-size: 11px;
+}
+
+/* Map pins (Leaflet divIcons). The outer box is the hit area (at least 24 px);
+   the pin is centred in it. Pins only show a tooltip, so no pointer cursor. */
 .pin-hit {
   display: grid;
   place-items: center;
@@ -56,7 +155,7 @@ dialog::backdrop {
   place-items: center;
   border-radius: 9999px;
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  box-shadow: 0 1px 2px rgb(27 35 51 / 0.35), 0 2px 6px rgb(27 35 51 / 0.18);
   color: #ffffff;
   font: 700 11px/1 var(--font-sans);
 }
@@ -66,49 +165,53 @@ dialog::backdrop {
   background: var(--color-accent);
 }
 .pin-bank-idle {
-  width: 16px;
-  height: 16px;
-  background: #9a9ca3;
+  width: 14px;
+  height: 14px;
+  background: #a3aab8;
 }
 .pin-bank-best {
   width: 30px;
   height: 30px;
   background: var(--color-accent);
-  outline: 3px solid rgb(179 32 47 / 0.3);
+  box-shadow: 0 0 0 5px rgb(179 32 47 / 0.22), 0 2px 6px rgb(27 35 51 / 0.25);
   font-size: 13px;
 }
+/* Donors: red outline on white (banks are solid red). */
 .pin-donor {
-  width: 18px;
-  height: 18px;
-  background: #1b1b1f;
-  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
+  border-radius: 7px;
+  font-size: 10px;
 }
 .pin-user {
   width: 18px;
   height: 18px;
-  background: #1a6fe8;
-  outline: 4px solid rgb(26 111 232 / 0.25);
+  background: var(--color-you);
+  box-shadow: 0 0 0 6px rgb(29 100 216 / 0.2), 0 1px 3px rgb(27 35 51 / 0.3);
 }
 .pin-reached {
   width: 24px;
   height: 24px;
-  background: #1e8e3e;
+  background: var(--color-ok);
   animation: pin-flash 0.6s ease-out;
 }
 .pin-reached-empty {
-  width: 18px;
-  height: 18px;
-  background: #9a9ca3;
+  width: 16px;
+  height: 16px;
+  background: #a3aab8;
   animation: pin-flash 0.6s ease-out;
 }
 .pin-label {
   background: #ffffff;
   border: 1px solid var(--color-line);
-  border-radius: 4px;
-  padding: 1px 4px;
-  font: 600 11px/1.3 var(--font-sans);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font: 600 11px/1.4 var(--font-sans);
   color: var(--color-ink);
-  box-shadow: none;
+  box-shadow: var(--shadow-raise);
 }
 .pin-label::before {
   display: none;
@@ -126,8 +229,57 @@ dialog::backdrop {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pin-reached,
-  .pin-reached-empty {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
+}
+
+/* ---- Text inputs and selects (Field gives every control this class) ------- */
+
+.control {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  box-shadow: var(--shadow-raise);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 15px;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.control::placeholder {
+  color: var(--color-faint);
+}
+.control:hover {
+  border-color: var(--color-line-strong);
+}
+.control:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgb(179 32 47 / 0.14);
+}
+.control:disabled {
+  background: var(--color-surface);
+  color: var(--color-muted);
+}
+.control:user-invalid {
+  border-color: var(--color-accent);
+}
+select.control {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235b6475' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 18px;
+}
+input[type="date"].control {
+  padding-right: 8px;
 }

@@ -44,14 +44,16 @@ export function ShowMoreList<T>({ items, noun, pageSize = 5, renderItem, classNa
       <ul ref={list} className={className}>
         {visible.map(renderItem)}
       </ul>
-      <p className="mt-3 text-center text-xs text-muted" aria-live="polite">
-        Showing {visible.length} of {items.length} {noun}
-      </p>
-      {remaining > 0 && (
-        <Button variant="secondary" className="mt-2 w-full" onClick={loadMore}>
-          Load {Math.min(pageSize, remaining)} more {noun}
-        </Button>
-      )}
+      <div className="mt-3 flex flex-col items-center gap-2">
+        {remaining > 0 && (
+          <Button variant="secondary" className="w-full" onClick={loadMore}>
+            Load {Math.min(pageSize, remaining)} more {noun}
+          </Button>
+        )}
+        <p className="tabular text-xs text-muted" aria-live="polite">
+          Showing {visible.length} of {items.length} {noun}
+        </p>
+      </div>
     </>
   );
 }

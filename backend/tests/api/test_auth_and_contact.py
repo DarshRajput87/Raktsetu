@@ -168,3 +168,12 @@ async def test_misuse_report(api):
     reports = (await api.client.get("/admin/reports", headers=admin)).json()
     assert reports[0]["reason"] == "Wrong number listed" and reports[0]["donor_id"] == donor["_id"]
     assert (await api.client.post("/donors/NOPE/report", json={"reason": "abc"}, headers=user)).status_code == 404
+
+
+def test_otp_sms_ends_with_the_webotp_line():
+    from api.routers.auth import otp_message
+
+    text = otp_message("123456", "https://raktsetu.example, http://localhost:3000")
+    assert text.startswith("Your RaktSetu login code is 123456.")
+    assert text.splitlines()[-1] == "@raktsetu.example #123456"
+    assert otp_message("654321", "http://localhost:3000").endswith("@localhost #654321")

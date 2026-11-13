@@ -5,7 +5,7 @@ import { useLayoutEffect, useState, type ComponentProps } from "react";
 
 function MapPlaceholder({ className = "h-72" }: { className?: string }) {
   return (
-    <div role="status" className={`grid place-items-center rounded-xl border border-line bg-surface text-sm text-muted ${className}`}>
+    <div role="status" className={`skeleton grid place-items-center rounded-[var(--radius-panel)] border border-line text-sm text-muted ${className}`}>
       Loading map…
     </div>
   );

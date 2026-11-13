@@ -4,7 +4,8 @@ import { useState } from "react";
 
 import { DonorCard } from "@/components/DonorCard";
 import { ShowMoreList } from "@/components/ShowMoreList";
-import { formatDate } from "@/components/ui";
+import { IconPhone } from "@/components/icons";
+import { StatusBadge, formatShortDate } from "@/components/ui";
 import { COMPONENT_LABELS, type Allocation, type BloodRequest } from "@/lib/types";
 
 const ALLOCATION_TEXT: Record<Allocation["status"], string> = {
@@ -33,8 +34,8 @@ export function RequestResults({ request }: { request: BloodRequest }) {
       type="button"
       aria-pressed={current === id}
       onClick={() => setTab(id)}
-      className={`min-h-11 flex-1 rounded-md px-3 text-sm font-semibold ${
-        current === id ? "bg-white text-accent shadow-sm" : "text-muted hover:text-ink"
+      className={`min-h-10 flex-1 rounded-[8px] px-3 text-[13px] font-semibold transition-[background-color,color,box-shadow] duration-150 ${
+        current === id ? "bg-white text-ink shadow-[var(--shadow-raise)]" : "text-muted hover:text-ink"
       }`}
     >
       {label}
@@ -42,8 +43,8 @@ export function RequestResults({ request }: { request: BloodRequest }) {
   );
 
   return (
-    <div className="mt-3">
-      <div role="group" aria-label={`Results for request ${request.id}`} className="flex gap-1 rounded-lg bg-surface p-1">
+    <div className="mt-4">
+      <div role="group" aria-label={`Results for request ${request.id}`} className="flex gap-1 rounded-[var(--radius-control)] bg-surface p-1">
         {tabButton("banks", `Blood banks (${request.allocations.length})`)}
         {tabButton("donors", `Donors (${request.donor_suggestions.length})`)}
       </div>
@@ -51,40 +52,50 @@ export function RequestResults({ request }: { request: BloodRequest }) {
       <div className="mt-3">
         {current === "banks" ? (
           request.status === "queued" ? (
-            <p className="text-sm text-muted">Finding the nearest blood banks with {what}…</p>
+            <p role="status" className="flex items-center gap-2 text-sm text-muted">
+              <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-accent" />
+              Finding the nearest blood banks with {what}…
+            </p>
           ) : hasBanks ? (
             <ul className="space-y-2">
               {request.allocations.map((allocation, index) => (
-                <li key={index} className="rounded-lg border border-line p-3 text-sm">
+                <li key={index} className="rounded-[var(--radius-control)] border border-line p-3.5 text-sm">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <span className="min-w-0 font-semibold [overflow-wrap:anywhere]">{allocation.bank_name}</span>
-                    <span className="tabular text-muted">{allocation.distance_km.toFixed(1)} km</span>
+                    <span className="flex items-center gap-2">
+                      <span className="tabular text-muted">{allocation.distance_km.toFixed(1)} km</span>
+                      <StatusBadge status={allocation.status} />
+                    </span>
                   </div>
-                  <p className={allocation.status === "accepted" ? "font-medium" : "text-muted"}>{ALLOCATION_TEXT[allocation.status]}</p>
-                  <p className="mt-1 text-muted">
-                    {allocation.units.length} unit{allocation.units.length === 1 ? "" : "s"}:{" "}
-                    {allocation.units.map((u) => `${u.blood_group} (expires ${formatDate(u.expires_on)})`).join(", ")}
-                  </p>
+                  <p className={`mt-1 ${allocation.status === "accepted" ? "font-medium text-ok" : "text-muted"}`}>{ALLOCATION_TEXT[allocation.status]}</p>
+                  <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Reserved units">
+                    {allocation.units.map((u) => (
+                      <li key={u.unit_id} className="rounded-md bg-surface px-2 py-0.5 text-xs ring-1 ring-inset ring-line">
+                        <span className="font-semibold">{u.blood_group}</span> <span className="text-muted">expires {formatShortDate(u.expires_on)}</span>
+                      </li>
+                    ))}
+                  </ul>
                   {allocation.bank_phone && allocation.status !== "rejected" && (
                     <a
-                      href={`tel:${allocation.bank_phone.replace(/[^+\d]/g, "")}`}
+                      href={`tel:${allocation.bank_phone.replace(/[^+d]/g, "")}`}
                       aria-label={`Call ${allocation.bank_name} on ${allocation.bank_phone}`}
-                      className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-line px-4 font-semibold hover:bg-surface"
+                      className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-[var(--radius-control)] bg-accent-soft px-3.5 text-[13px] font-semibold text-accent-dark hover:bg-accent-tint-2"
                     >
+                      <IconPhone size={16} />
                       Call {allocation.bank_phone}
                     </a>
                   )}
                   {SHOW_DEMO_LOGINS && allocation.status === "pending" && (
-                    <p className="mt-2 text-xs text-muted">
+                    <p className="mt-3 rounded-lg bg-surface px-3 py-2 text-xs leading-relaxed text-muted">
                       Demo: to accept it, log in on the Blood bank page as{" "}
-                      <span className="font-mono [overflow-wrap:anywhere]">{demoBankLogin(allocation.bank_id)}</span>.
+                      <span className="font-semibold text-ink-soft [overflow-wrap:anywhere]">{demoBankLogin(allocation.bank_id)}</span>
                     </p>
                   )}
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="rounded-lg border border-accent bg-accent-soft px-3 py-2 text-sm text-accent-dark">
+            <div className="rounded-[var(--radius-control)] border border-accent/25 bg-accent-soft px-3.5 py-3 text-sm text-accent-dark">
               <p className="font-semibold">No blood bank within 25 km has {what} or a compatible group.</p>
               <p>The request was not sent to any bank. Contact the matching donors in the Donors tab.</p>
             </div>
@@ -95,7 +106,7 @@ export function RequestResults({ request }: { request: BloodRequest }) {
             <ShowMoreList
               items={request.donor_suggestions}
               noun="donors"
-              className="grid gap-2 sm:grid-cols-2"
+              className="grid gap-2 xl:grid-cols-2"
               renderItem={(donor) => <DonorCard key={donor.donor_id} donor={donor} />}
             />
           </>

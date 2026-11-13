@@ -3,6 +3,7 @@
 import logging
 import uuid
 from typing import Annotated
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends
 
@@ -26,6 +27,13 @@ OTP_ERRORS = {
 }
 
 
+def otp_message(otp: str, frontend_origin: str) -> str:
+    """The SMS text. Its last line, "@<site> #<code>", lets phones fill the code in by
+    themselves (WebOTP in Chrome on Android; iOS also reads it)."""
+    site = urlparse(frontend_origin.split(",")[0].strip()).hostname or "localhost"
+    return f"Your RaktSetu login code is {otp}. It is valid for 5 minutes.\n\n@{site} #{otp}"
+
+
 def normalise_phone(phone: str) -> str:
     return phone.replace(" ", "")
 
@@ -36,7 +44,7 @@ async def send_otp(body: schemas.OtpSendIn, services: ServicesDep, settings: Set
     logged, because no SMS provider is connected yet."""
     phone = normalise_phone(body.phone)
     otp = services.otp.issue(phone, now())
-    services.sms.send(phone, f"Your RaktSetu login code is {otp}. It is valid for 5 minutes.")
+    services.sms.send(phone, otp_message(otp, settings.frontend_origin))
     return {"sent": True, "expires_in_seconds": settings.otp_ttl_seconds,
             "dev_otp": otp if settings.is_dev else None}
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { IconPhone } from "@/components/icons";
 import { Button, ErrorMessage, Field } from "@/components/ui";
 import { api, errorMessage } from "@/lib/api";
 import type { TokenResponse } from "@/lib/types";
@@ -33,6 +34,9 @@ export function OtpLoginModal({ onSuccess, onClose }: Props) {
     try {
       const sent = await api<{ dev_otp: string | null }>("/auth/otp/send", { method: "POST", body: { phone } });
       setDevOtp(sent.dev_otp);
+      // Development: no SMS is sent, so fill the code in. Real SMS codes are filled by the
+      // browser (WebOTP on Android, the keyboard suggestion on iOS), see the effect below.
+      setOtp(sent.dev_otp ?? "");
       setStep("code");
     } catch (e) {
       setError(errorMessage(e).replace(/^phone: .*/, "Enter a valid phone number, for example +91-00000-12345."));
@@ -40,6 +44,26 @@ export function OtpLoginModal({ onSuccess, onClose }: Props) {
       setBusy(false);
     }
   }
+
+  // WebOTP (Chrome on Android): read the code from the incoming SMS and log in with it.
+  // Needs an SMS whose last line is "@<site> #<code>", which the backend sends.
+  const codeForm = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (step !== "code" || devOtp || !("OTPCredential" in window)) return;
+    const controller = new AbortController();
+    navigator.credentials
+      .get({ otp: { transport: ["sms"] }, signal: controller.signal } as CredentialRequestOptions)
+      .then((credential) => {
+        const code = (credential as (Credential & { code?: string }) | null)?.code;
+        if (!code) return;
+        setOtp(code);
+        requestAnimationFrame(() => codeForm.current?.requestSubmit());
+      })
+      .catch(() => {
+        /* aborted, or the user typed the code instead */
+      });
+    return () => controller.abort();
+  }, [step, devOtp]);
 
   async function verify(event: React.FormEvent) {
     event.preventDefault();
@@ -58,12 +82,15 @@ export function OtpLoginModal({ onSuccess, onClose }: Props) {
       ref={dialog}
       onClose={onClose}
       aria-labelledby="otp-title"
-      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl border border-line p-5 text-ink"
+      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-[var(--radius-panel)] border border-line bg-white p-6 text-ink shadow-[0_24px_64px_-12px_rgb(27_35_51/0.35)]"
     >
-      <h2 id="otp-title" className="text-lg font-bold">
+      <span aria-hidden="true" className="mb-4 grid size-11 place-items-center rounded-[13px] bg-accent-soft text-accent ring-1 ring-inset ring-accent/15">
+        <IconPhone size={22} />
+      </span>
+      <h2 id="otp-title" className="text-[20px] font-semibold tracking-tight">
         Log in with your phone
       </h2>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1.5 text-sm leading-relaxed text-muted">
         Donor phone numbers are shown only to logged-in users, and every view is recorded.
       </p>
 
@@ -96,10 +123,10 @@ export function OtpLoginModal({ onSuccess, onClose }: Props) {
           </div>
         </form>
       ) : (
-        <form onSubmit={verify} className="mt-4 space-y-3">
+        <form ref={codeForm} onSubmit={verify} className="mt-4 space-y-3">
           <Field
             label={`Code sent to ${phone}`}
-            hint={devOtp ? `Development mode, no SMS is sent. Your code is ${devOtp}.` : "The code is valid for 5 minutes."}
+            hint={devOtp ? "Development mode: no SMS is sent, so the code was filled in for you." : "The code is valid for 5 minutes. On most phones it fills in by itself when the SMS arrives."}
           >
             {(field) => (
               <input

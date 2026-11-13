@@ -215,8 +215,10 @@ export default function LeafletMap({
   const noop = useMemo(() => () => {}, []);
 
   return (
-    <div role="region" aria-label={label} className={`relative z-0 overflow-hidden rounded-xl border border-line ${className}`}>
+    <div role="region" aria-label={label} className={`relative z-0 overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface ${className}`}>
       <MapContainer center={center} zoom={zoom} scrollWheelZoom className="h-full w-full">
+        {/* Standard, full-colour OpenStreetMap tiles. RaktSetu's pins stay distinct from the map's own
+            hospital symbols: banks are larger solid red circles marked B, donors red-outlined D tags. */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
