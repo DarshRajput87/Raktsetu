@@ -128,7 +128,8 @@ export default function SearchPage() {
   const searchKey = result ? [result.city_id, result.group, result.component, result.radius_km, ...result.start].join("|") : "";
   const mapBanks = useMemo<MapBank[]>(() => {
     const hits = new Map(result?.banks.map((b) => [b.bank_id, b]) ?? []);
-    return (allBanks.data ?? []).map((bank) => {
+    // Only the selected city's banks: names repeat across cities, and the other cities are off-screen.
+    return (allBanks.data ?? []).filter((bank) => bank.city_id === city?.id).map((bank) => {
       const hit = hits.get(bank.id);
       return {
         id: bank.id,
@@ -139,7 +140,7 @@ export default function SearchPage() {
         label: hit ? `${hit.distance_km.toFixed(1)} km, ${hit.units} units` : undefined,
       };
     });
-  }, [allBanks.data, result, routeBankId]);
+  }, [allBanks.data, result, routeBankId, city?.id]);
 
   const shownRoute = animating ? [] : (route?.points ?? result?.route ?? []);
   const fit = useMemo<LatLng[]>(() => {

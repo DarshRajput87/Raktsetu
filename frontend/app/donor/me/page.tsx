@@ -19,13 +19,19 @@ export default function DonorProfilePage() {
   const [notice, setNotice] = useState("");
 
   async function toggle(field: "available" | "contact_consent", value: boolean) {
+    const before = profile.data;
+    if (!before) return;
+    // Flip the switch at once; put it back if saving fails.
+    profile.setData({ ...before, [field]: value });
     setSaving(field);
     setError("");
+    setNotice("");
     try {
       profile.setData(await api<Donor>("/donors/me", { method: "PATCH", body: { [field]: value } }));
       setNotice(field === "available" ? `You are now marked ${value ? "available" : "not available"}.` : `Your phone number is now ${value ? "shared" : "hidden"}.`);
     } catch (e) {
-      setError(errorMessage(e));
+      profile.setData(before);
+      setError(`Could not save: ${errorMessage(e)}`);
     } finally {
       setSaving("");
     }

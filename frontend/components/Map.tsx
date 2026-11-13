@@ -54,8 +54,15 @@ interface Props {
   className?: string;
 }
 
+/** A round pin drawn at `size`, inside a hit area of at least 24 px (WCAG 2.2 target size). */
 function pin(kind: string, text = "", size = 22) {
-  return L.divIcon({ className: "", html: `<div class="pin ${kind}">${text}</div>`, iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+  const hit = Math.max(24, size);
+  return L.divIcon({
+    className: "pin-hit",
+    html: `<div class="pin ${kind}" aria-hidden="true">${text}</div>`,
+    iconSize: [hit, hit],
+    iconAnchor: [hit / 2, hit / 2],
+  });
 }
 
 const ICONS = {
@@ -77,8 +84,10 @@ function FitTo({ points }: { points: LatLng[] }) {
   const map = useMap();
   const key = points.map((p) => p.join(",")).join(";");
   useEffect(() => {
-    if (points.length === 1) map.setView(points[0], Math.max(map.getZoom(), 13));
-    else if (points.length > 1) map.fitBounds(L.latLngBounds(points), { padding: [30, 30], maxZoom: 15 });
+    // No animation: Leaflet 1.9 leaves a 250 ms zoom timer running after map.remove(), which
+    // throws "_leaflet_pos" if the map is unmounted mid-zoom (e.g. Continue right after a pin move).
+    if (points.length === 1) map.setView(points[0], Math.max(map.getZoom(), 13), { animate: false });
+    else if (points.length > 1) map.fitBounds(L.latLngBounds(points), { padding: [30, 30], maxZoom: 15, animate: false });
     // `key` stands for the contents of `points`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, key]);
@@ -228,6 +237,7 @@ export default function LeafletMap({
             zIndexOffset={bank.state === "best" ? 800 : bank.state === "hit" ? 500 : 0}
             title={bank.name}
             alt={`Blood bank: ${bank.name}`}
+            keyboard={false}
           >
             <Tooltip direction="top" offset={[0, -10]}>
               {bank.name}
@@ -236,13 +246,13 @@ export default function LeafletMap({
           </Marker>
         ))}
         {donors.map((donor) => (
-          <Marker key={donor.id} position={[donor.lat, donor.lng]} icon={ICONS.donor} title={donor.name} alt={`Donor: ${donor.name}`} zIndexOffset={400}>
+          <Marker key={donor.id} position={[donor.lat, donor.lng]} icon={ICONS.donor} title={donor.name} alt={`Donor: ${donor.name}`} zIndexOffset={400} keyboard={false}>
             <Tooltip direction="top" offset={[0, -10]}>
               Donor: {donor.name}
             </Tooltip>
           </Marker>
         ))}
-        {user && <Marker position={user} icon={ICONS.user} title="Your location" alt="Your location" zIndexOffset={1000} />}
+        {user && <Marker position={user} icon={ICONS.user} title="Your location" alt="Your location" zIndexOffset={1000} keyboard={false} />}
 
         {animation && (
           <TraceAnimation key={animation.runId} animation={animation} speedRef={speedRef} skipRef={skipRef} onDone={onAnimationDone ?? noop} />

@@ -42,7 +42,15 @@ dialog::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
 
-/* Map pins (Leaflet divIcons) */
+/* Map pins (Leaflet divIcons). The outer box is the hit area; the pin is centred in it.
+   Pins do nothing when clicked (they only show a tooltip), so no pointer cursor. */
+.pin-hit {
+  display: grid;
+  place-items: center;
+}
+.leaflet-marker-icon.pin-hit {
+  cursor: default;
+}
 .pin {
   display: grid;
   place-items: center;
