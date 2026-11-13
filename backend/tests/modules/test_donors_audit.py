@@ -96,7 +96,7 @@ def test_issue_is_fefo_and_undo_returns_the_units(tiny):
     units = stock.issue_units(tiny, "BK1", "B+", "red_cells", 2, "admin1", TODAY, NOW)
     assert [u["_id"] for u in units] == ["U2", "U1"]      # U2 expires first
     assert tiny.inventory.count_available("BK1", ["B+"], "red_cells", TODAY) == 0
-    with pytest.raises(ValueError, match="only 0 unit"):
+    with pytest.raises(ValueError, match=r"Only 0 B\+ red cells unit"):
         stock.issue_units(tiny, "BK1", "B+", "red_cells", 1, "admin1", TODAY, NOW)
     tiny.undo.undo("admin1")
     assert tiny.inventory.count_available("BK1", ["B+"], "red_cells", TODAY) == 2

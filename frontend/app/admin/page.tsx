@@ -69,7 +69,7 @@ function AdminDashboard() {
           </EmptyState>
         )}
         {shown.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-line">
+          <div className="relative overflow-x-auto rounded-xl border border-line">
             <table className="w-full min-w-[34rem] text-left text-sm">
               <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
                 <tr>

@@ -148,7 +148,7 @@ function BankDashboard() {
         <ErrorMessage onRetry={log.reload}>{log.error}</ErrorMessage>
         {log.data?.length === 0 && <EmptyState title="Nothing logged yet">Adding, issuing and expiring units is recorded here.</EmptyState>}
         {log.data && log.data.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-line">
+          <div className="relative overflow-x-auto rounded-xl border border-line">
             <table className="w-full min-w-[28rem] text-left text-sm">
               <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
                 <tr>
@@ -187,7 +187,7 @@ function StockTable({ stock }: { stock: Stock }) {
       <p className="mb-3 text-sm text-muted">
         Usable units by group and component. Cells marked in red have units that expire within 3 days: issue those first.
       </p>
-      <div className="overflow-x-auto rounded-xl border border-line">
+      <div className="relative overflow-x-auto rounded-xl border border-line">
         <table className="tabular w-full min-w-[26rem] text-center text-sm">
           <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
             <tr>

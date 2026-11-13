@@ -9,6 +9,11 @@ from modules.eligibility import is_eligible
 from modules.state import AppState
 
 
+def readable(component: str) -> str:
+    """whole_blood -> whole blood, for messages people read."""
+    return component.replace("_", " ")
+
+
 def add_unit(state: AppState, bank_id: str, group: str | None, component: str, actor_id: str,
              today: date, now: datetime, donor_id: str | None = None) -> dict:
     """Add one unit to a bank. With a donor_id it is recorded as that donor's
@@ -38,7 +43,7 @@ def add_unit(state: AppState, bank_id: str, group: str | None, component: str, a
         state.audit.record(bank_id, "removed", [unit["_id"]], actor_id, now, {"undo_of": "added"})
         return {"removed_unit_ids": [unit["_id"]], "donor": donor}
 
-    state.undo.push(actor_id, f"add {unit['blood_group']} {component} unit", inverse)
+    state.undo.push(actor_id, f"add {unit['blood_group']} {readable(component)} unit", inverse)
     return unit
 
 
@@ -48,7 +53,7 @@ def issue_units(state: AppState, bank_id: str, group: str, component: str, count
     Raises ValueError if the bank does not have that many. Undo returns them to stock."""
     available = state.inventory.count_available(bank_id, [group], component, today)
     if count > available:
-        raise ValueError(f"only {available} unit(s) of {group} {component} available")
+        raise ValueError(f"Only {available} {group} {readable(component)} unit(s) available")
     units = state.inventory.issue(bank_id, [group], component, count, today)
     unit_ids = [u["_id"] for u in units]
     state.audit.record(bank_id, "issued", unit_ids, actor_id, now,
@@ -60,7 +65,7 @@ def issue_units(state: AppState, bank_id: str, group: str, component: str, count
         state.audit.record(bank_id, "returned", unit_ids, actor_id, now, {"undo_of": "issued"})
         return {"returned_unit_ids": unit_ids}
 
-    state.undo.push(actor_id, f"issue {count} {group} {component} unit(s)", inverse)
+    state.undo.push(actor_id, f"issue {count} {group} {readable(component)} unit(s)", inverse)
     return units
 
 

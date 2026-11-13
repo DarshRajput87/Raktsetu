@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 
 import { BankCard } from "@/components/BankCard";
 import { DonorCard } from "@/components/DonorCard";
+import { ShowMoreList } from "@/components/ShowMoreList";
 import MapView from "@/components/MapView";
 import type { MapAnimation, MapBank } from "@/components/Map";
 import { BloodGroupSelect, Button, ComponentSelect, EmptyState, ErrorMessage, Field, LoadingSpinner } from "@/components/ui";
@@ -123,6 +124,8 @@ export default function SearchPage() {
   }
 
   const routeBankId = route?.bankId ?? result?.route_bank_id;
+  // A new search (or a new location) starts the lists again at 5.
+  const searchKey = result ? [result.city_id, result.group, result.component, result.radius_km, ...result.start].join("|") : "";
   const mapBanks = useMemo<MapBank[]>(() => {
     const hits = new Map(result?.banks.map((b) => [b.bank_id, b]) ?? []);
     return (allBanks.data ?? []).map((bank) => {
@@ -218,7 +221,7 @@ export default function SearchPage() {
             Search results
           </h2>
           {searching && <LoadingSpinner label="Searching the road network…" />}
-          {!searching && result && <Results result={result} label={label} routeBankId={routeBankId} onShowRoute={showRoute} />}
+          {!searching && result && <Results key={searchKey} result={result} label={label} routeBankId={routeBankId} onShowRoute={showRoute} />}
 
           {!searching && result && (
             <div className="mt-4 space-y-3 border-t border-line pt-4">
@@ -305,16 +308,18 @@ function Results({
           within {result.radius_km} km {result.banks.length === 1 ? "has" : "have"} {label} or a compatible group (
           {result.compatible_groups.join(", ")}). Nearest first.
         </p>
-        <ul className="space-y-3">
-          {result.banks.map((bank, index) => (
+        <ShowMoreList
+          items={result.banks}
+          noun="blood banks"
+          renderItem={(bank, index) => (
             <BankCard
               key={bank.bank_id}
               bank={bank}
               nearest={index === 0}
               onShowRoute={bank.bank_id === routeBankId ? undefined : () => onShowRoute(bank.bank_id)}
             />
-          ))}
-        </ul>
+          )}
+        />
       </>
     );
   }
@@ -325,11 +330,11 @@ function Results({
         {result.donors.length > 0 && <p>These donors nearby match and have agreed to be contacted. Nearest first.</p>}
       </div>
       {result.donors.length > 0 ? (
-        <ul className="space-y-3">
-          {result.donors.map((donor) => (
-            <DonorCard key={donor.donor_id} donor={donor} />
-          ))}
-        </ul>
+        <ShowMoreList
+          items={result.donors}
+          noun="donors"
+          renderItem={(donor) => <DonorCard key={donor.donor_id} donor={donor} />}
+        />
       ) : (
         <EmptyState title="No matching donors nearby either">Try a wider search, or a different component.</EmptyState>
       )}

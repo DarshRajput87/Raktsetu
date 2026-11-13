@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { DonorCard } from "@/components/DonorCard";
+import { ShowMoreList } from "@/components/ShowMoreList";
 import { StaffGate } from "@/components/StaffGate";
 import {
   BloodGroupSelect, Button, Card, ComponentSelect, EmptyState, ErrorMessage, Field, LoadingSpinner, PageTitle,
@@ -140,11 +142,18 @@ function HospitalDashboard() {
                   </ul>
                 )}
                 {request.donor_suggestions.length > 0 && (
-                  <p className="mt-3 text-sm">
-                    <span className="font-medium">Donors to contact:</span>{" "}
-                    {request.donor_suggestions.map((d) => `${d.name} (${d.blood_group}, ${d.distance_km.toFixed(1)} km)`).join(", ")}. Find their
-                    numbers through the search page.
-                  </p>
+                  <details className="mt-3" open={request.status === "unfulfilled"}>
+                    <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">
+                      {request.donor_suggestions.length} matching donor{request.donor_suggestions.length === 1 ? "" : "s"} near your hospital
+                    </summary>
+                    <p className="mb-2 text-xs text-muted">Nearest first. Each number you open is recorded.</p>
+                    <ShowMoreList
+                      items={request.donor_suggestions}
+                      noun="donors"
+                      className="grid gap-2 sm:grid-cols-2"
+                      renderItem={(donor) => <DonorCard key={donor.donor_id} donor={donor} />}
+                    />
+                  </details>
                 )}
               </Card>
             </li>

@@ -30,7 +30,7 @@ export function Header() {
           </span>
           RaktSetu
         </Link>
-        <nav aria-label="Main" className="order-3 -mx-2 flex w-full gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto">
+        <nav aria-label="Main" className="order-3 -mx-2 flex w-full flex-wrap gap-x-1 sm:order-none sm:mx-0 sm:w-auto">
           {links.map((link) => {
             const current = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return (

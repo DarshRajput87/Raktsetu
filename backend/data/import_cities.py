@@ -84,10 +84,13 @@ def get_graph(city: dict):
     return download_graph(city, cache)
 
 
-def build_city(city: dict, args: argparse.Namespace) -> tuple[dict[str, list[dict]], dict]:
+def build_city(city: dict, args: argparse.Namespace, index: int = 0) -> tuple[dict[str, list[dict]], dict]:
     """Roads plus (unless --roads-only) fake places, in the same order of random
     draws as generate_real_data.main, so the same seed gives the same data."""
-    rng = random.Random(args.seed)
+    # Each city gets its own seed (seed + its position in cities.json) and its own
+    # block of fake phone numbers, so cities do not share names or numbers. The
+    # first city (Ahmedabad) keeps the plain seed and matches generate_real_data.py.
+    rng = random.Random(args.seed + index)
     as_of = date.fromisoformat(args.as_of)
     G = get_graph(city)
     nodes, edges = real.convert_graph(G, city["id"])
@@ -107,11 +110,13 @@ def build_city(city: dict, args: argparse.Namespace) -> tuple[dict[str, list[dic
         donor_sampler = real.weighted_node_sampler(rng, nodes, center, 12.0)
         donor_nodes = [donor_sampler(1)[0] for _ in range(args.donors)]
 
-        banks = real.build_places_real(rng, nodes, bank_nodes, "B", "bank", city["id"], 100)
+        banks = real.build_places_real(rng, nodes, bank_nodes, "B", "bank", city["id"], 100 + index * args.banks)
         for bank in banks:
             bank["admin_user_id"] = None
-        hospitals = real.build_places_real(rng, nodes, hospital_nodes, "H", "hospital", city["id"], 500)
+        hospitals = real.build_places_real(rng, nodes, hospital_nodes, "H", "hospital", city["id"], 1000 + index * args.hospitals)
         donors = real.build_donors_real(rng, nodes, donor_nodes, banks, adj, as_of, city["id"])
+        for k, donor in enumerate(donors):
+            donor["phone"] = real.fake_phone(10000 + index * args.donors + k)
         units = build_units(rng, banks, as_of, args.units_per_bank, args.empty_bank_share)
         collections.update(blood_banks=banks, hospitals=hospitals, donors=donors, blood_units=units)
 
@@ -147,17 +152,19 @@ def store(db, city: dict, collections: dict[str, list[dict]], meta: dict) -> Non
              "notes": city.get("notes", "")}
     doc = seed.city_document(city["id"], meta, collections, extra)
     for name, docs in collections.items():
-        db[name].delete_many({"city_id": city["id"]})
+        # Only the generated documents (ids "<city>:..."); donors who registered
+        # through the app and units added by banks are kept.
+        db[name].delete_many({"city_id": city["id"], "_id": {"$regex": f"^{city['id']}:"}})
         for i in range(0, len(docs), seed.BATCH):
             db[name].insert_many(docs[i:i + seed.BATCH], ordered=False)
     db.cities.replace_one({"_id": city["id"]}, doc, upsert=True)
     seed.create_indexes(db)
 
 
-def import_city(db, city: dict, args: argparse.Namespace) -> None:
+def import_city(db, city: dict, args: argparse.Namespace, index: int = 0) -> None:
     t0 = time.time()
     print(f"\n=== {city['name']} ({city['id']}), city + {city['margin_km']} km ===")
-    collections, meta = build_city(city, args)
+    collections, meta = build_city(city, args, index)
     out = write_json(city["id"], collections, meta)
     if db is not None:
         store(db, city, collections, meta)
@@ -205,7 +212,7 @@ def main() -> None:
         if missing:
             save_graphs(Path(args.pbf), missing, HERE / "downloads")
     for city in selected:
-        import_city(db, city, args)
+        import_city(db, city, args, cities.index(city))  # position in cities.json, not in this run
     if db is not None and not args.roads_only:
         from db.accounts import seed_accounts
         print(f"\nDemo accounts written: {seed_accounts(db)}")

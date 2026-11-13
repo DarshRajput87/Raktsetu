@@ -61,7 +61,7 @@ async def issue_units(body: schemas.IssueIn, user: BankUser, state: StateDep, db
         units = stock.issue_units(state, user["bank_id"], body.group, body.component, body.count,
                                   user["_id"], today, now())
     except ValueError as exc:
-        raise ApiError(409, "not_enough_stock", str(exc).capitalize() + ".")
+        raise ApiError(409, "not_enough_stock", f"{exc}.")
     await repo.update_units_status(db, [u["_id"] for u in units], "issued")
     await flush_audit(state, db)
     return {"issued": [unit_out(u) for u in units]}

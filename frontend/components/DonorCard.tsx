@@ -11,7 +11,7 @@ import type { Contact, DonorHit } from "@/lib/types";
  * A matching donor. The phone number is not in the search result at all: it is
  * fetched from /donors/{id}/contact only after login, when "Show number" is used.
  */
-export function DonorCard({ donor }: { donor: DonorHit }) {
+export function DonorCard({ donor }: { donor: Pick<DonorHit, "donor_id" | "name" | "blood_group" | "distance_km"> }) {
   const { requireLogin } = useAuth();
   const [contact, setContact] = useState<Contact | null>(null);
   const [busy, setBusy] = useState(false);
