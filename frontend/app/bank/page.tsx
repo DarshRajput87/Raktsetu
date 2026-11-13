@@ -17,7 +17,12 @@ import {
 export default function BankPage() {
   const cities = useApi<City[]>("/cities");
   return (
-    <StaffGate role="bank_admin" title="Blood bank" demoEmail={demoEmail(cities.data, "b001", "bank")}>
+    <StaffGate
+      role="bank_admin"
+      title="Blood bank"
+      demoEmail={demoEmail(cities.data, "b001", "bank")}
+      note="A hospital request goes only to the nearest bank(s) with that blood in stock, not to every bank. The request card on the Hospital page shows which bank's login to use."
+    >
       <BankDashboard />
     </StaffGate>
   );

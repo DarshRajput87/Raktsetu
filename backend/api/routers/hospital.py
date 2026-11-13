@@ -28,7 +28,7 @@ async def create_request(body: schemas.RequestIn, user: HospitalUser, state: Sta
     state.requests_by_id[request["_id"]] = request
     state.request_queue.push(request, at)
     await repo.insert_request(db, request)
-    return request_out(request, at)
+    return request_out(request, at, state.banks_by_id)
 
 
 @router.get("/requests", response_model=list[schemas.RequestOut])
@@ -37,7 +37,7 @@ async def list_requests(user: HospitalUser, state: StateDep) -> list[dict]:
     at = now()
     mine = [r for r in state.requests_by_id.values() if r["hospital_id"] == user["hospital_id"]]
     mine.sort(key=lambda r: r["created_at"], reverse=True)
-    return [request_out(r, at) for r in mine]
+    return [request_out(r, at, state.banks_by_id) for r in mine]
 
 
 @router.get("/requests/{request_id}", response_model=schemas.RequestOut)
@@ -45,4 +45,4 @@ async def get_request(request_id: str, user: HospitalUser, state: StateDep) -> d
     request = state.requests_by_id.get(request_id)
     if request is None or request["hospital_id"] != user["hospital_id"]:
         raise not_found("Request")
-    return request_out(request, now())
+    return request_out(request, now(), state.banks_by_id)

@@ -87,7 +87,8 @@ def test_fulfil_takes_units_from_the_nearest_bank_first(tiny):
     assert (first["bank_id"], first["unit_ids"]) == ("BK1", ["U2", "U1", "U3"])
     assert (second["bank_id"], second["unit_ids"]) == ("BK2", ["U4"])
     assert all(tiny.inventory.get(u)["status"] == "reserved" for u in ["U1", "U2", "U3", "U4"])
-    assert request["donor_suggestions"] == []
+    # Donors are listed even when banks cover the request: B+ red cells -> B+, B-, O+, O-.
+    assert [d["donor_id"] for d in request["donor_suggestions"]] == ["D2", "D7"]
     assert [e["action"] for e in tiny.audit.recent("BK1")] == ["reserved"]
 
 

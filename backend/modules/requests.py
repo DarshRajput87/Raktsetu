@@ -18,6 +18,7 @@ URGENCY: dict[str, int] = {
     "other": 20,
 }
 AGING_PER_MINUTE = 0.5
+MAX_DONOR_SUGGESTIONS = 20
 
 
 def base_score(patient_condition: str) -> int:
@@ -126,9 +127,11 @@ def fulfil(state, request: dict, today: date, now: datetime, radius_km: float = 
         state.audit.record(hit.bank_id, "reserved", [u["_id"] for u in units], request["hospital_id"],
                            now, {"request_id": request["_id"]})
 
-    request["donor_suggestions"] = [] if remaining <= 0 else [
+    # Matching donors near the hospital are always listed, nearest first, so the
+    # hospital can reach donors even while banks are still deciding.
+    request["donor_suggestions"] = [
         {"donor_id": d.donor_id, "name": d.name, "blood_group": d.blood_group,
-         "distance_km": d.distance_km} for d in result.donors[:10]]
+         "distance_km": d.distance_km} for d in result.donors[:MAX_DONOR_SUGGESTIONS]]
     state.request_sequence += 1
     request["sequence"] = state.request_sequence
     request["processed_at"] = now

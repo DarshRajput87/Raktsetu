@@ -44,7 +44,7 @@ def donor_out(state: AppState, donor: dict, today: date) -> dict:
     }
 
 
-def request_out(request: dict, now: datetime) -> dict:
+def request_out(request: dict, now: datetime, banks: dict[str, dict] | None = None) -> dict:
     waiting = request["status"] == "queued"
     return {
         "id": request["_id"], "hospital_id": request["hospital_id"],
@@ -56,7 +56,8 @@ def request_out(request: dict, now: datetime) -> dict:
         "status": request["status"], "created_at": request["created_at"],
         "processed_at": request.get("processed_at"), "sequence": request.get("sequence"),
         "allocations": [{"bank_id": a["bank_id"], "bank_name": a["bank_name"],
-                         "distance_km": a["distance_km"], "units": a["units"], "status": a["status"]}
+                         "distance_km": a["distance_km"], "units": a["units"], "status": a["status"],
+                         "bank_phone": (banks or {}).get(a["bank_id"], {}).get("phone")}
                         for a in request["allocations"]],
         "donor_suggestions": request.get("donor_suggestions", []),
     }

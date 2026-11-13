@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { EligibilityResult } from "@/components/EligibilityResult";
 import MapView from "@/components/MapView";
@@ -40,6 +40,13 @@ export default function DonorRegisterPage() {
   const [error, setError] = useState("");
   const [registered, setRegistered] = useState<Donor | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+
+  // After the phone login the dialog closes and the button that opened it is gone,
+  // so put keyboard focus on the first step instead of the top of the page.
+  const canRegister = user?.role === "public";
+  useEffect(() => {
+    if (canRegister) heading.current?.focus();
+  }, [canRegister]);
 
   function go(next: number) {
     setError("");

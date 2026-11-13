@@ -205,6 +205,7 @@ class AllocationOut(BaseModel):
     distance_km: float
     units: list[AllocatedUnit]
     status: str
+    bank_phone: str | None = None
 
 
 class DonorSuggestion(BaseModel):

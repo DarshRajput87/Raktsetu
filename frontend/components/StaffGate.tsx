@@ -11,11 +11,13 @@ interface Props {
   role: Extract<Role, "hospital" | "bank_admin" | "admin">;
   title: string;
   demoEmail: string;
+  /** Extra help shown under the demo account line. */
+  note?: React.ReactNode;
   children: React.ReactNode;
 }
 
 /** Shows its children only to a logged-in account with the right role; otherwise the email + password form. */
-export function StaffGate({ role, title, demoEmail, children }: Props) {
+export function StaffGate({ role, title, demoEmail, note, children }: Props) {
   const { ready, user, signIn, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,6 +83,7 @@ export function StaffGate({ role, title, demoEmail, children }: Props) {
           Fill in
         </Button>
       </p>
+      {note && <p className="mt-2 text-xs text-muted">{note}</p>}
     </div>
   );
 }

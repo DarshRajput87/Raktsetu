@@ -168,6 +168,7 @@ export interface Allocation {
   distance_km: number;
   units: AllocatedUnit[];
   status: "pending" | "accepted" | "rejected";
+  bank_phone?: string | null;
 }
 
 export interface BloodRequest {

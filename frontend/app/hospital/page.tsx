@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 
-import { DonorCard } from "@/components/DonorCard";
-import { ShowMoreList } from "@/components/ShowMoreList";
+import { RequestResults } from "@/components/RequestResults";
 import { StaffGate } from "@/components/StaffGate";
 import {
   BloodGroupSelect, Button, Card, ComponentSelect, EmptyState, ErrorMessage, Field, LoadingSpinner, PageTitle,
-  StatusBadge, UrgencyBadge, formatDate, formatTime,
+  StatusBadge, UrgencyBadge, formatTime,
 } from "@/components/ui";
 import { api, errorMessage } from "@/lib/api";
 import { demoEmail, useApi } from "@/lib/hooks";
@@ -25,8 +24,8 @@ export default function HospitalPage() {
 const STATUS_HELP: Record<BloodRequest["status"], string> = {
   queued: "Waiting in the priority queue. This usually takes a few seconds.",
   allocated: "Units are reserved. Waiting for the blood bank(s) to accept.",
-  partial: "Only some units were found in blood banks. Contact the donors below for the rest.",
-  unfulfilled: "No blood bank within 25 km has stock. Contact the donors below.",
+  partial: "Only some units were found in blood banks. Contact donors for the rest.",
+  unfulfilled: "No blood bank within 25 km has stock. Contact donors instead.",
   completed: "All blood banks accepted. The units are ready to collect.",
 };
 
@@ -124,37 +123,7 @@ function HospitalDashboard() {
                 </p>
                 <p className="mt-2 text-sm">{STATUS_HELP[request.status]}</p>
 
-                {request.allocations.length > 0 && (
-                  <ul className="mt-3 space-y-2">
-                    {request.allocations.map((allocation, index) => (
-                      <li key={index} className="rounded-lg bg-surface px-3 py-2 text-sm">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-medium [overflow-wrap:anywhere]">{allocation.bank_name}</span>
-                          <span className="tabular text-muted">{allocation.distance_km.toFixed(1)} km</span>
-                        </div>
-                        <p className="text-muted">
-                          {allocation.units.length} unit{allocation.units.length === 1 ? "" : "s"} (
-                          {allocation.units.map((u) => `${u.blood_group}, expires ${formatDate(u.expires_on)}`).join("; ")}) ·{" "}
-                          <span className="font-medium text-ink">{allocation.status}</span>
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {request.donor_suggestions.length > 0 && (
-                  <details className="mt-3" open={request.status === "unfulfilled"}>
-                    <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">
-                      {request.donor_suggestions.length} matching donor{request.donor_suggestions.length === 1 ? "" : "s"} near your hospital
-                    </summary>
-                    <p className="mb-2 text-xs text-muted">Nearest first. Each number you open is recorded.</p>
-                    <ShowMoreList
-                      items={request.donor_suggestions}
-                      noun="donors"
-                      className="grid gap-2 sm:grid-cols-2"
-                      renderItem={(donor) => <DonorCard key={donor.donor_id} donor={donor} />}
-                    />
-                  </details>
-                )}
+                <RequestResults request={request} />
               </Card>
             </li>
           ))}
