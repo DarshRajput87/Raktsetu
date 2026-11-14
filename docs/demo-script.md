@@ -1,8 +1,7 @@
 # Demo script (5 minutes)
 
 A walkthrough of the three cases for the viva, on the synthetic city (seed 42, as of
-2026-11-13). Replace `<site>` with the frontend URL: the Vercel URL, or `http://localhost:3000`
-locally.
+2026-11-13). `<site>` is `https://raktsetu.zorvx.shop` (or `http://localhost:3000` locally).
 
 ## Before you start (5 minutes before)
 

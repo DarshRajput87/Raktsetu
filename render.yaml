@@ -14,8 +14,10 @@ services:
     envVars:
       - key: MONGO_URI          # MongoDB Atlas connection string (mongodb+srv://...)
         sync: false
-      - key: FRONTEND_ORIGIN    # the Vercel URL, e.g. https://raktsetu.vercel.app (comma-separate several)
-        sync: false
+      # The site (on Vercel) allowed to call the API (CORS); comma-separate several.
+      # The first one also names the site in the login SMS ("@raktsetu.zorvx.shop #123456").
+      - key: FRONTEND_ORIGIN
+        value: https://raktsetu.zorvx.shop
       - key: JWT_SECRET
         generateValue: true
       - key: DB_NAME
