@@ -12,7 +12,7 @@ services:
     # Deploys come from GitHub Actions (.github/workflows/main.yml) after the tests pass.
     autoDeploy: false
     envVars:
-      - key: MONGO_URI          # MongoDB Atlas connection string (mongodb+srv://...)
+      - key: mongodb+srv://DarshRajputApp:tst4I6oi6m77xXJS@cluster0.jfptrcd.mongodb.net/         # MongoDB Atlas connection string (mongodb+srv://...)
         sync: false
       # The site (on Vercel) allowed to call the API (CORS); comma-separate several.
       # The first one also names the site in the login SMS ("@raktsetu.zorvx.shop #123456").
