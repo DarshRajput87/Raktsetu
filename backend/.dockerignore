@@ -1,0 +1,19 @@
+# Keep the image small: no local environment, secrets, tests or generated data.
+.venv/
+venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+!.env.example
+tests/
+benchmarks/
+simulation/
+data/output/
+data/output_real/
+data/output_cities/
+data/downloads/
+cache/
+Dockerfile
+.dockerignore

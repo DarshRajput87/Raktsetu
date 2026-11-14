@@ -24,6 +24,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Startup: connect to MongoDB and load it into memory. Shutdown: stop the
     background loop and close the connection."""
     settings = get_settings()
+    settings.check_production()
     client = connect(settings.mongo_uri)
     app.state.db = client[settings.db_name]
     app.state.data = await load_state(app.state.db, settings.city_cache_capacity)

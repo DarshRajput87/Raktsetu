@@ -68,3 +68,20 @@ test("falls back to donors when no bank has stock, and shows a number only after
   await expect(vikram).toContainText(/\+91-00000-\d{5}/);
   await expect(vikram.getByRole("link", { name: "Call Vikram S." })).toBeVisible();
 });
+
+test("a shared link fills in the search (demo case 2: one far bank)", async ({ page }) => {
+  await page.goto("/?group=AB-&component=platelets&lat=23.2021&lng=72.7706");
+  await expect(page.getByRole("radio", { name: "AB-", exact: true })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Platelets", exact: true })).toBeChecked();
+  await expect(page.getByText("Location set at 23.2021, 72.7706")).toBeVisible();
+  await page.getByRole("button", { name: /^Search for/ }).click();
+  const nearest = page.locator("li", { hasText: "Nearest with stock" });
+  await expect(nearest).toContainText("Gandhi Park Blood Centre");
+  await expect(nearest).toContainText("19.9");
+});
+
+test("a link with bad values falls back to the defaults", async ({ page }) => {
+  await page.goto("/?group=X%2B&component=soup&lat=abc&lng=1");
+  await expect(page.getByRole("radio", { name: "B+", exact: true })).toBeChecked();
+  await expect(page.getByText("Or tap the map to drop a pin where you are.")).toBeVisible();
+});

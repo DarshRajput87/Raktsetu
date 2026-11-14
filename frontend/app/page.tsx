@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { BankCard } from "@/components/BankCard";
 import { DonorCard } from "@/components/DonorCard";
@@ -11,11 +11,35 @@ import { ShowMoreList } from "@/components/ShowMoreList";
 import { BloodGroupPicker, Button, ComponentPicker, EmptyState, ErrorMessage, Field, SkeletonList } from "@/components/ui";
 import { api, ApiError, errorMessage } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
-import { COMPONENT_LABELS, type Bank, type BloodGroup, type City, type Component, type LatLng, type SearchResult } from "@/lib/types";
+import {
+  BLOOD_GROUPS,
+  COMPONENT_LABELS,
+  COMPONENTS,
+  type Bank,
+  type BloodGroup,
+  type City,
+  type Component,
+  type LatLng,
+  type SearchResult,
+} from "@/lib/types";
 
 const DEFAULT_RADIUS = 25;
 const WIDE_RADIUS = 50;
 const FALLBACK_CENTER: LatLng = [23.0225, 72.5714];
+
+/** A search shared as a link, e.g. /?group=O-&component=platelets&lat=22.8021&lng=72.3275 (used by the demo script). */
+function searchFromUrl(): { group?: BloodGroup; component?: Component; position?: LatLng } {
+  const params = new URLSearchParams(window.location.search);
+  const group = params.get("group");
+  const component = params.get("component");
+  const lat = Number(params.get("lat"));
+  const lng = Number(params.get("lng"));
+  return {
+    group: BLOOD_GROUPS.find((g) => g === group),
+    component: COMPONENTS.find((c) => c === component),
+    position: params.has("lat") && params.has("lng") && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? [lat, lng] : undefined,
+  };
+}
 
 export default function SearchPage() {
   const cities = useApi<City[]>("/cities");
@@ -41,6 +65,16 @@ export default function SearchPage() {
   const resultsRef = useRef<HTMLHeadingElement>(null);
   const runId = useRef(0);
   const mapRef = useRef<HTMLDivElement>(null);
+
+  // Fill the form from a shared link once, after the first render (the URL is not known while prerendering).
+  useEffect(() => {
+    const shared = searchFromUrl();
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time read of the URL on mount */
+    if (shared.group) setGroup(shared.group);
+    if (shared.component) setComponent(shared.component);
+    if (shared.position) setPosition(shared.position);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
 
   const city = cities.data?.find((c) => c.id === cityId) ?? cities.data?.[0];
   const center = city?.center ?? FALLBACK_CENTER;

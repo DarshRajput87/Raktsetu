@@ -613,7 +613,7 @@ the means in `summary.csv`, and the day-by-day wastage in `daily_wastage.csv`.
 
 
 def charts(summary: list[dict], daily: list[dict], days: int, runs: int) -> None:
-    from benchmarks.bench_core import GRID, INK, MUTED, SURFACE, chart_style, end_label, rounded_bar
+    from benchmarks.bench_core import INK, MUTED, chart_style, end_label, rounded_bar
 
     # Categorical slots 1-3 of the validated palette (blue, orange, aqua); aqua is below 3:1 on
     # white, so every bar and line also carries a direct text label.

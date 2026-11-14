@@ -40,13 +40,13 @@ def normalise_phone(phone: str) -> str:
 
 @router.post("/otp/send", response_model=schemas.OtpSendOut)
 async def send_otp(body: schemas.OtpSendIn, services: ServicesDep, settings: SettingsDep) -> dict:
-    """Send a 6-digit login code. In development the code is also returned and
-    logged, because no SMS provider is connected yet."""
+    """Send a 6-digit login code. In development (or with SHOW_OTP=true) the code
+    is also returned, because no SMS provider is connected yet."""
     phone = normalise_phone(body.phone)
     otp = services.otp.issue(phone, now())
     services.sms.send(phone, otp_message(otp, settings.frontend_origin))
     return {"sent": True, "expires_in_seconds": settings.otp_ttl_seconds,
-            "dev_otp": otp if settings.is_dev else None}
+            "dev_otp": otp if settings.otp_in_response else None}
 
 
 @router.post("/otp/verify", response_model=schemas.TokenOut)
