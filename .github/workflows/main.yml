@@ -1,0 +1,174 @@
+# Backend CI/CD
+#
+# Every push and pull request that touches the backend:
+#   1. test    pytest against a real MongoDB, on the fixed synthetic city (seed 42)
+#   2. docker  build the API image and check that it starts and answers /health
+# Pushes to main, once both pass:
+#   3. deploy  trigger the Render deploy hook (repository secret RENDER_DEPLOY_HOOK_URL)
+#
+# Render's own auto-deploy is turned off in render.yaml, so only tested commits go live.
+
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "render.yaml"
+      - ".github/workflows/main.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "render.yaml"
+      - ".github/workflows/main.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    # An explicit bash shell runs with -eo pipefail, so `pytest | tee` keeps pytest's exit code.
+    shell: bash
+    working-directory: backend
+
+jobs:
+  test:
+    name: Tests (pytest + MongoDB)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      # The tests pick their own database names (raktsetu_test, ...); only the server comes from here.
+      MONGO_URI: mongodb://localhost:27017
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate the synthetic city (seed 42, as of 2026-11-13)
+        # Standard library only; data/output is not in the repository.
+        run: python data/generate_data.py --as-of 2026-11-13 --seed 42
+
+      - name: Run tests
+        # -rs lists skipped tests; the check below fails the job if any were skipped,
+        # so a missing MongoDB or missing data can never pass as green.
+        run: python -m pytest -q -rs --junitxml=test-results.xml | tee pytest.log
+
+      - name: Fail on skipped tests
+        run: |
+          if grep -qE "[0-9]+ skipped" pytest.log; then
+            echo "::error::Some tests were skipped (see the list above)."
+            exit 1
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: backend/test-results.xml
+          if-no-files-found: ignore
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image
+        run: docker build -t raktsetu-api:${{ github.sha }} .
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Seed a database for the smoke test
+        run: |
+          pip install -r requirements.txt
+          python data/generate_data.py --as-of 2026-11-13 --seed 42
+          python -m db.seed --reset --mongo-uri mongodb://localhost:27017 --db raktsetu_ci
+
+      - name: Start the container and check /health
+        # Production settings, as on Render, so the startup checks (JWT secret) run too.
+        run: |
+          docker run -d --name api --network host \
+            -e MONGO_URI=mongodb://localhost:27017 -e DB_NAME=raktsetu_ci \
+            -e ENVIRONMENT=production -e JWT_SECRET="$(openssl rand -hex 32)" \
+            -e SHOW_OTP=true -e AS_OF_DATE=2026-11-13 -e PORT=8000 \
+            raktsetu-api:${{ github.sha }}
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8000/health; then
+              echo
+              curl -fsS "http://localhost:8000/search?group=B%2B&component=red_cells&lat=23.0225&lng=72.5714" \
+                | python -c "import json, sys; r = json.load(sys.stdin); assert r['banks'], r; print('search ok:', len(r['banks']), 'banks')"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::The API did not become healthy."
+          docker logs api
+          exit 1
+
+      - name: Container logs
+        if: always()
+        run: docker logs api || true
+
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [test, docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+    defaults:
+      run:
+        shell: bash
+        working-directory: .   # no checkout in this job
+    steps:
+      - name: Trigger the Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::Add the repository secret RENDER_DEPLOY_HOOK_URL (Render -> service -> Settings -> Deploy Hook)."
+            exit 1
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL" > /dev/null
+          echo "Render deploy triggered for ${GITHUB_SHA::7}."

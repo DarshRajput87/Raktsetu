@@ -247,6 +247,16 @@ The repository has a Blueprint (`render.yaml`) and a Dockerfile (`backend/Docker
 The free plan sleeps after 15 minutes without requests; the first request then takes up to a
 minute. The health check path is `/health`.
 
+**CI/CD.** `.github/workflows/main.yml` runs on every push and pull request that touches the
+backend. It runs the tests against a real MongoDB on the synthetic city, and fails if any test is
+skipped. It then builds the Docker image, starts it with production settings and checks `/health`
+and a search. On a push to `main`, once both jobs pass, it triggers the Render deploy.
+`render.yaml` turns Render's own auto-deploy off, so only tested commits go live. One-time
+setup: in Render, open the service → **Settings → Deploy Hook** and copy the URL. Then in
+GitHub, open the repository → **Settings → Secrets and variables → Actions** and add it as
+`RENDER_DEPLOY_HOOK_URL`. If the service was created before auto-deploy was turned off, also set
+**Auto-Deploy** to **No** in its settings.
+
 To run the same image elsewhere:
 
 ```

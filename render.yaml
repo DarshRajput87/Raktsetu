@@ -9,7 +9,8 @@ services:
     plan: free
     region: singapore
     healthCheckPath: /health
-    autoDeploy: true
+    # Deploys come from GitHub Actions (.github/workflows/main.yml) after the tests pass.
+    autoDeploy: false
     envVars:
       - key: MONGO_URI          # MongoDB Atlas connection string (mongodb+srv://...)
         sync: false
