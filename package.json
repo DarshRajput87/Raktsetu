@@ -3,7 +3,8 @@
   "private": true,
   "description": "Task runner for RaktSetu (same targets as the Makefile).",
   "scripts": {
-    "backend-dev": "cd backend && .venv\\Scripts\\python -m uvicorn api.main:app --reload",
+    "backend-dev": "cd backend && .venv\\Scripts\\python serve.py dev",
+    "backend-prod": "cd backend && .venv\\Scripts\\python serve.py prod",
     "frontend-dev": "cd frontend && npm run dev",
     "test": "npm run test-backend && npm run test-e2e",
     "test-backend": "cd backend && .venv\\Scripts\\python -m pytest -q",

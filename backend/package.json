@@ -1,10 +1,12 @@
 {
   "name": "raktsetu-backend",
   "private": true,
-  "description": "Shortcuts for the RaktSetu API, run from backend/ (Windows; the venv is backend/.venv). Extra arguments go to the command, e.g. npm run dev -- --port 8010",
+  "description": "Shortcuts for the RaktSetu API, run from backend/ (Windows; the venv is backend/.venv). dev = local MongoDB (.env), prod = Atlas (.env.production). Extra arguments go after --, e.g. npm run dev -- --port 8010",
   "scripts": {
-    "dev": ".venv\\Scripts\\python -m uvicorn api.main:app --reload",
-    "backend-dev": "npm run dev --",
+    "dev": ".venv\\Scripts\\python serve.py dev",
+    "backend-dev": ".venv\\Scripts\\python serve.py dev",
+    "prod": ".venv\\Scripts\\python serve.py prod",
+    "backend-prod": ".venv\\Scripts\\python serve.py prod",
     "start": ".venv\\Scripts\\python -m uvicorn api.main:app --host 0.0.0.0 --port 8000",
     "test": ".venv\\Scripts\\python -m pytest -q",
     "seed": ".venv\\Scripts\\python -m db.seed --reset",

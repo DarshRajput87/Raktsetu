@@ -107,15 +107,21 @@ This loads the synthetic city (a 60 km road grid centred on Ahmedabad: 30 banks,
 to `h040@...`. Donors and the public log in with a phone number and a one-time code, which is
 shown on screen in development.
 
-Run the API (from `backend/`, with the venv active), or `npm run dev` from `backend/` without
-activating anything (`npm run backend-dev` works too, from `backend/` or the repository root):
+Run the API. There are two env files, one per database, and the command picks one:
 
-```
-uvicorn api.main:app --reload
-```
+| Command (from `backend/` or the repository root) | Env file | Database |
+|---|---|---|
+| `npm run backend-dev` | `backend/.env` | Local MongoDB, auto-reload |
+| `npm run backend-prod` | `backend/.env.production` | MongoDB Atlas, production settings |
 
-From `backend/`, `npm run` also has `start`, `test`, `seed`, `bench` and `simulate`; extra
-arguments go after `--`, e.g. `npm run dev -- --port 8010`.
+Create them from the templates: `backend/.env.example` and `backend/.env.production.example`.
+Both real files are git-ignored. On start, the API prints which database it uses, for example
+`RaktSetu API (prod): .env.production -> MongoDB cluster0....mongodb.net, database 'raktsetu'`.
+`npm run seed` and `python -m db.seed` use `.env`; to run one against Atlas, set
+`ENV_FILE=.env.production` first. Extra arguments go after `--`, for example
+`npm run backend-dev -- --port 8010`.
+
+Without npm: `python serve.py dev` or `python serve.py prod` from `backend/` with the venv active.
 
 - Health check: http://localhost:8000/health
 - API docs: http://localhost:8000/docs
@@ -133,8 +139,9 @@ Open http://localhost:3000. The API URL defaults to `http://localhost:8000`; to 
 
 ## Configuration
 
-Backend settings come from environment variables or `backend/.env` (see `backend/.env.example`).
-Never commit `.env`.
+Backend settings come from environment variables, or from `backend/.env` (local) or
+`backend/.env.production` (Atlas), chosen by `ENV_FILE` (see "Run the API" above). Real
+environment variables win over the file. Never commit either file.
 
 | Variable | Default | Meaning |
 |---|---|---|

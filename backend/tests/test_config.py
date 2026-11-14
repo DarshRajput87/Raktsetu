@@ -35,3 +35,37 @@ def test_production_accepts_a_strong_secret_and_development_anything():
 def test_empty_show_otp_means_unset(monkeypatch):
     monkeypatch.setenv("SHOW_OTP", "")
     assert Settings(_env_file=None).show_otp is None
+
+
+def test_env_file_defaults_to_dot_env(monkeypatch):
+    from config import BACKEND_DIR, env_file
+
+    monkeypatch.delenv("ENV_FILE", raising=False)
+    assert env_file() == BACKEND_DIR / ".env"
+
+
+def test_env_file_follows_env_file_variable(monkeypatch, tmp_path):
+    from config import env_file
+
+    target = tmp_path / "atlas.env"
+    target.write_text("MONGO_URI=mongodb://atlas.example:27017\nDB_NAME=from_file\n", encoding="utf-8")
+    monkeypatch.setenv("ENV_FILE", str(target))
+    monkeypatch.delenv("DB_NAME", raising=False)
+    assert env_file() == target
+    assert Settings(_env_file=env_file()).db_name == "from_file"
+
+
+def test_a_missing_env_file_is_an_error_not_a_silent_fallback(monkeypatch):
+    from config import env_file
+
+    monkeypatch.setenv("ENV_FILE", ".env.does-not-exist")
+    with pytest.raises(FileNotFoundError):
+        env_file()
+
+
+def test_serve_never_prints_the_password():
+    from serve import safe_host
+
+    fake = "mongodb+srv://user:" + "secret@cluster0.example.mongodb.net/"  # split so the leak test ignores it
+    assert safe_host(fake) == "cluster0.example.mongodb.net"
+    assert safe_host("mongodb://localhost:27017") == "localhost"

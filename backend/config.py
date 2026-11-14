@@ -1,5 +1,11 @@
-"""Application settings, read from environment variables or backend/.env."""
+"""Application settings, read from environment variables or an env file.
 
+The env file is backend/.env (local MongoDB) unless ENV_FILE names another one,
+e.g. ENV_FILE=.env.production for Atlas (see serve.py). Real environment
+variables always win over the file; on Render there is no file at all.
+"""
+
+import os
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -55,6 +61,22 @@ class Settings(BaseSettings):
             raise RuntimeError("Set JWT_SECRET to a random string of at least 32 characters in production.")
 
 
+def env_file() -> Path:
+    """The env file to read: ENV_FILE (relative to backend/) or .env.
+
+    A missing .env is fine (defaults and real environment variables apply), but a
+    missing file named by ENV_FILE is an error: silently falling back to the local
+    database would be worse.
+    """
+    name = os.environ.get("ENV_FILE", "").strip()
+    if not name:
+        return BACKEND_DIR / ".env"
+    path = Path(name) if Path(name).is_absolute() else BACKEND_DIR / name
+    if not path.is_file():
+        raise FileNotFoundError(f"ENV_FILE={name} does not exist ({path}).")
+    return path
+
+
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings(_env_file=env_file())

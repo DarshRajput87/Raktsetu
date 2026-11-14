@@ -7,10 +7,15 @@ else
 PY := backend/.venv/bin/python
 endif
 
-.PHONY: backend-dev frontend-dev test test-backend test-e2e bench simulate seed
+.PHONY: backend-dev backend-prod frontend-dev test test-backend test-e2e bench simulate seed
 
+# Local MongoDB (backend/.env), with auto-reload.
 backend-dev:
-	cd backend && ../$(PY) -m uvicorn api.main:app --reload
+	cd backend && ../$(PY) serve.py dev
+
+# MongoDB Atlas (backend/.env.production).
+backend-prod:
+	cd backend && ../$(PY) serve.py prod
 
 frontend-dev:
 	cd frontend && npm run dev
