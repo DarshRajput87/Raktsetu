@@ -140,6 +140,15 @@ class Inventory:
                 result[group] = n
         return result
 
+    def available_units(self, bank_id: str, group: str, component: str,
+                        today: date | None = None) -> list[dict]:
+        """Usable units of one (bank, group, component), in no particular order. O(n).
+
+        Used by the simulator's "traditional" method, where a bank hands out a
+        random unit instead of the soonest to expire.
+        """
+        return self._live_units((bank_id, group, component), today)
+
     def count_available(self, bank_id: str, groups: list[str], component: str,
                         today: date | None = None) -> int:
         """Usable (available, not expired) units of any of the groups. O(sum of heap sizes)."""

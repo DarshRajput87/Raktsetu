@@ -9,6 +9,7 @@
     "test-backend": "cd backend && .venv\\Scripts\\python -m pytest -q",
     "test-e2e": "cd frontend && npx playwright test",
     "bench": "cd backend && .venv\\Scripts\\python -m benchmarks.bench_core",
+    "simulate": "cd backend && .venv\\Scripts\\python -m simulation.simulator --days 90 --runs 10",
     "seed": "cd backend && .venv\\Scripts\\python -m db.seed --reset"
   }
 }

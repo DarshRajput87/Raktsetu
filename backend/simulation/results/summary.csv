@@ -1,0 +1,4 @@
+method,runs,wastage_pct_mean,wastage_pct_std,locate_min_mean_mean,locate_min_mean_std,locate_min_p90_mean,locate_min_p90_std,fulfilment_pct_mean,fulfilment_pct_std,critical_fulfilment_pct_mean,critical_fulfilment_pct_std,distance_km_mean_mean,distance_km_mean_std,donor_fallback_pct_mean,donor_fallback_pct_std,transfers_mean,transfers_std,requests_mean,requests_std,seconds_mean,seconds_std
+traditional,10,15.37,0.418,7.511,0.162,18.9,1.449,79.73,0.697,80.022,0.595,33.236,0.261,0.0,0.0,0.0,0.0,5574.6,59.199,10.689,0.081
+raktsetu,10,13.865,0.449,4.212,0.085,10.1,0.316,92.601,0.49,93.184,0.596,13.618,0.326,24.015,1.087,0.0,0.0,5574.6,59.199,3.714,0.156
+raktsetu_transfer,10,12.364,0.41,4.196,0.091,10.1,0.316,93.08,0.54,93.707,0.475,13.273,0.286,23.232,1.119,1498.3,51.94,5574.6,59.199,4.951,0.123

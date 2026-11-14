@@ -7,7 +7,7 @@ else
 PY := backend/.venv/bin/python
 endif
 
-.PHONY: backend-dev frontend-dev test test-backend test-e2e bench seed
+.PHONY: backend-dev frontend-dev test test-backend test-e2e bench simulate seed
 
 backend-dev:
 	cd backend && ../$(PY) -m uvicorn api.main:app --reload
@@ -27,6 +27,9 @@ test-e2e:
 
 bench:
 	cd backend && ../$(PY) -m benchmarks.bench_core
+
+simulate:
+	cd backend && ../$(PY) -m simulation.simulator --days 90 --runs 10
 
 seed:
 	cd backend && ../$(PY) -m db.seed --reset

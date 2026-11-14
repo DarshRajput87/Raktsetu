@@ -111,6 +111,18 @@ def test_only_available_units_are_in_the_heaps():
     assert [u["_id"] for u in inv.issue("BK1", ["B+"], "red_cells", 9, TODAY)] == ["U4"]
 
 
+def test_available_units_lists_only_usable_units_of_one_heap():
+    inv = Inventory()
+    inv.add_unit(unit("U1", day(2)))
+    inv.add_unit(unit("U2", day(-1)))                       # expired
+    inv.add_unit(unit("U3", day(4), status="reserved"))
+    inv.add_unit(unit("U4", day(5), group="O+"))            # other group
+    inv.add_unit(unit("U5", day(6)))
+    inv.set_status("U5", "issued")                          # stale heap entry
+    assert [u["_id"] for u in inv.available_units("BK1", "B+", "red_cells", TODAY)] == ["U1"]
+    assert inv.available_units("BK1", "B+", "platelets", TODAY) == []
+
+
 def test_expired_units_are_never_counted_or_issued():
     inv = Inventory()
     inv.add_unit(unit("OLD", day(-1)))
