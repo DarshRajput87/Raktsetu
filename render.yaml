@@ -30,4 +30,4 @@ services:
       - key: SEARCH_RADIUS_KM
         value: "25"
       - key: CITY_CACHE_CAPACITY
-        value: "1"
+        value: "2"   # Atlas holds Ahmedabad and Vadodara
