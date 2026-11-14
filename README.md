@@ -107,11 +107,15 @@ This loads the synthetic city (a 60 km road grid centred on Ahmedabad: 30 banks,
 to `h040@...`. Donors and the public log in with a phone number and a one-time code, which is
 shown on screen in development.
 
-Run the API:
+Run the API (from `backend/`, with the venv active), or `npm run dev` from `backend/` without
+activating anything (`npm run backend-dev` works too, from `backend/` or the repository root):
 
 ```
 uvicorn api.main:app --reload
 ```
+
+From `backend/`, `npm run` also has `start`, `test`, `seed`, `bench` and `simulate`; extra
+arguments go after `--`, e.g. `npm run dev -- --port 8010`.
 
 - Health check: http://localhost:8000/health
 - API docs: http://localhost:8000/docs

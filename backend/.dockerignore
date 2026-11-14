@@ -17,3 +17,4 @@ data/downloads/
 cache/
 Dockerfile
 .dockerignore
+package.json
